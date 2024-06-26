@@ -1,0 +1,36 @@
+name: Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      HEADSCALE_HOST: http://localhost # only to prevent error
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          sparse-checkout: |
+            frontend
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run check
+        working-directory: frontend
+        run: npm run check

@@ -1,0 +1,30 @@
+version: "3.9" # legacy
+name: headscale
+
+volumes:
+  headscale-data:
+  headscale-socket:
+
+services:
+  headscale:
+    image: headscale/headscale:0.22.3
+    container_name: headscale
+    restart: always
+    command: headscale serve
+    volumes:
+      - $PWD/.devcontainer/headscale.yaml:/etc/headscale/config.yaml:ro
+      - headscale-data:/var/lib/headscale:rw
+      - headscale-socket:/var/run/headscale:rw
+
+  headscale-admin:
+    image: ghcr.io/rickli-cloud/headscale-admin:latest
+    container_name: headscale-admin
+    restart: always
+    # pull_policy: never # only use local images
+    environment:
+      HSADM_CONFIG_PATH: /headscale-config.yaml
+    volumes:
+      - $PWD/.devcontainer/headscale.yaml:/headscale-config.yaml:ro
+      - headscale-socket:/var/run/headscale:ro
+    ports:
+      - 8000:8000
