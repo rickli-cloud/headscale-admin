@@ -64,8 +64,8 @@ jobs:
       - name: Release build assets
         run: |
           cd ${{github.workspace}}
-          zip -r build-${{github.event.release.tag_name}}.zip build
-          gh release upload ${{github.event.release.tag_name}} build-${{github.event.release.tag_name}}.zip
+          zip -r frontend-build-${{github.event.release.tag_name}}.zip frontend/build
+          gh release upload ${{github.event.release.tag_name}} frontend-build-${{github.event.release.tag_name}}.zip
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         shell: bash
