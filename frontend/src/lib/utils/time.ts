@@ -23,3 +23,9 @@ export function formatDuration(ms: number, includeMs: boolean = false): string {
 		.map(([key, val]) => `${val}${key}`)
 		.join(', ');
 }
+
+export function isExpired(timestamp: string | Date): boolean {
+	if (timestamp === '0001-01-01T00:00:00Z') return false;
+	const timeLeft = Math.max(0, new Date(timestamp).getTime() - Date.now());
+	return timeLeft === 0 || timeLeft < 0;
+}

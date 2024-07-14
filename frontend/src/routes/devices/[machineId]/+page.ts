@@ -1,15 +1,10 @@
-import { Headscale } from '$lib/api/utils.js';
+import { Headscale, Machine } from '$lib/api';
 
 export async function load({ fetch, params }) {
 	const headscale = new Headscale(fetch);
 
-	const {
-		data: { machine }
-	} = await headscale.api.headscaleServiceGetMachine(params.machineId);
-
-	const {
-		data: { routes }
-	} = await headscale.api.headscaleServiceGetMachineRoutes(params.machineId);
+	const machine = await Machine.get(params.machineId, headscale);
+	const routes = await machine?.getRoutes();
 
 	return {
 		machine,

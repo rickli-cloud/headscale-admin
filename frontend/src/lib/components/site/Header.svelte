@@ -24,8 +24,9 @@
 	>
 		<nav class="flex flex-nowrap items-center gap-6 text-sm">
 			<a
-				href={base + "/"}
+				href={base}
 				class="font-extrabold"
+				class:!text-foreground={/^(#\/)?$/i.test(document.location.hash)}
 			>
 				<HeadscaleLogo />
 			</a>

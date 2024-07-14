@@ -3,44 +3,41 @@
 
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+
+	import * as Form from '$lib/components/form';
+	import { createEventDispatcher } from 'svelte';
 
 	export let phrase: string;
 	export let onSubmit: () => void | Promise<void>;
 
 	const InputPhrase = writable<string>('');
 	const MatchErr = writable<boolean>(true);
-	const Working = writable<boolean>(false);
+
+	const dispatch = createEventDispatcher();
 
 	InputPhrase.subscribe((input) => MatchErr.set(input !== phrase));
 
 	async function handleSubmit() {
-		Working.set(true);
 		await onSubmit();
-		Working.set(false);
+		dispatch('submit');
 	}
 </script>
 
-<form id="userinfo" class="grid w-full items-center gap-4" on:submit|preventDefault={handleSubmit}>
-	<div class="flex flex-col space-y-3">
+<Form.Root
+	onSubmit={handleSubmit}
+	onReset={() => InputPhrase.set('')}
+	let:disabled
+	DisableSubmit={MatchErr}
+	Destructive
+	SubmitText="Delete"
+>
+	<Form.Item>
 		<Label aria-required for="confirmation">
-			Confirm deletion by writing out
+			Confirm by writing out
 			<span class="select-none font-bold">
 				"{phrase}"
 			</span>
 		</Label>
-		<Input required id="confirmation" bind:value={$InputPhrase} disabled={$Working} />
-	</div>
-</form>
-
-<div class="mt-3 flex justify-between gap-3">
-	<p class="star-note self-start text-xs text-muted-foreground">Required</p>
-	<div class="flex gap-3">
-		<Button variant="outline" type="reset" on:click={() => InputPhrase.set('')} disabled={$Working}>
-			Reset
-		</Button>
-		<Button form="userinfo" type="submit" disabled={$MatchErr || $Working} variant="destructive">
-			Continue
-		</Button>
-	</div>
-</div>
+		<Input required id="confirmation" bind:value={$InputPhrase} {disabled} />
+	</Form.Item>
+</Form.Root>

@@ -95,7 +95,7 @@
 	}
 
 	main.container {
-		@apply grid gap-x-4 gap-y-10 overflow-x-scroll pb-8 pt-6;
+		@apply grid gap-x-4 gap-y-14 overflow-x-scroll pb-8 pt-6;
 	}
 }
 
@@ -124,6 +124,9 @@
 		& > a {
 			@apply block h-full w-full p-4;
 		}
+	}
+	table.actions > tbody > tr > td:first-child {
+		@apply !p-0;
 	}
 
 	label[aria-required='true']:after,
@@ -156,6 +159,10 @@
 		& > button.danger {
 			@apply text-red-600 aria-disabled:text-opacity-50;
 		}
+	}
+
+	hr.spacer {
+		@apply my-6 w-full border;
 	}
 }
 

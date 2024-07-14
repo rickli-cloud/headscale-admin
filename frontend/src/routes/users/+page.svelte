@@ -1,11 +1,20 @@
 <script lang="ts">
+	import { writable } from 'svelte/store';
+
 	import UsersList from '$lib/components/users/UsersList.svelte';
+
+	import { page } from '$app/stores';
+	import type { User } from '$lib/api';
 
 	export let data;
 
-	console.table(data.users);
+	const Users = writable<User[]>(data.users || []);
+
+	page.subscribe(({ data }) => {
+		Users.set(data.users || []);
+	});
 </script>
 
 <section>
-	<UsersList users={data.users} />
+	<UsersList {Users} />
 </section>

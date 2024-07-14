@@ -5,12 +5,12 @@ config();
 
 import pkg from './package.json';
 
-const { HEADSCALE_HOST = "http://localhost:8000" } = process.env;
+const { HEADSCALE_HOST = 'http://localhost:8000' } = process.env;
 
 export default defineConfig(({ mode }) => {
 	if (mode === 'development') {
-		console.debug(`[Proxy] ^/api => ${HEADSCALE_HOST}`);
 		if (!HEADSCALE_HOST) throw new Error('Environment variable HEADSCALE_HOST is required!');
+		console.debug(`[Proxy] ^/api => ${HEADSCALE_HOST}`);
 	}
 
 	return {

@@ -10,7 +10,7 @@
 	import { cn } from '$lib/utils.js';
 
 	import type { V1User } from '$lib/api/api';
-	import { User } from '$lib/api/utils';
+	import { User } from '$lib/api';
 
 	export let users: V1User[] | undefined = undefined;
 	export let selected: V1User | undefined = undefined;
@@ -33,60 +33,58 @@
 	}
 </script>
 
-<div class="flex flex-col space-y-2">
-	<Label aria-required for={id}>User</Label>
-	<Popover.Root bind:open let:ids>
-		<Popover.Trigger asChild let:builder>
-			<Button
-				builders={[builder]}
-				variant="outline"
-				role="combobox"
-				aria-expanded={open}
-				class="w-full justify-between"
-				{id}
-			>
-				{#if selected?.name}
-					<span>
-						{selected.name}
-						<span class="text-muted-foreground">
-							#{selected.id}
-						</span>
+<Label aria-required for={id}>User</Label>
+<Popover.Root bind:open let:ids>
+	<Popover.Trigger asChild let:builder>
+		<Button
+			builders={[builder]}
+			variant="outline"
+			role="combobox"
+			aria-expanded={open}
+			class="w-full justify-between"
+			{id}
+		>
+			{#if selected?.name}
+				<span>
+					{selected.name}
+					<span class="text-muted-foreground">
+						#{selected.id}
 					</span>
-				{:else}
-					Select
+				</span>
+			{:else}
+				Select
+			{/if}
+			<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+		</Button>
+	</Popover.Trigger>
+
+	<Popover.Content class="w-[calc(100%-49px)] p-0">
+		<Command.Root>
+			<Command.Input placeholder="Search..." />
+
+			<Command.Empty>No users found.</Command.Empty>
+
+			<Command.Group>
+				{#if users}
+					{#each users as user}
+						<Command.Item
+							value={user.name}
+							onSelect={() => {
+								selected = user;
+								closeAndFocusTrigger(ids.trigger);
+							}}
+						>
+							<Check
+								class={cn('mr-2 h-4 w-4', selected?.name !== user.name && 'text-transparent')}
+							/>
+							{user.name}
+							<span class="ml-1 text-muted-foreground">
+								#{user.id}
+							</span>
+						</Command.Item>
+					{/each}
 				{/if}
-				<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-			</Button>
-		</Popover.Trigger>
-
-		<Popover.Content class="w-[calc(100%-49px)] p-0">
-			<Command.Root>
-				<Command.Input placeholder="Search..." />
-
-				<Command.Empty>No users found.</Command.Empty>
-
-				<Command.Group>
-					{#if users}
-						{#each users as user}
-							<Command.Item
-								value={user.name}
-								onSelect={() => {
-									selected = user;
-									closeAndFocusTrigger(ids.trigger);
-								}}
-							>
-								<Check
-									class={cn('mr-2 h-4 w-4', selected?.name !== user.name && 'text-transparent')}
-								/>
-								{user.name}
-								<span class="ml-1 text-muted-foreground">
-									#{user.id}
-								</span>
-							</Command.Item>
-						{/each}
-					{/if}
-				</Command.Group>
-			</Command.Root>
-		</Popover.Content>
-	</Popover.Root>
-</div>
+			</Command.Group>
+		</Command.Root>
+	</Popover.Content>
+</Popover.Root>

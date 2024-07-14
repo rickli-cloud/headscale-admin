@@ -1,11 +1,9 @@
-import { Headscale } from '$lib/api/utils.js';
+import { Headscale, User } from '$lib/api';
 
 export async function load({ fetch }) {
 	const headscale = new Headscale(fetch);
 
-	const {
-		data: { users }
-	} = await headscale.api.headscaleServiceListUsers();
+	const users = await User.list(headscale);
 
 	return {
 		users
