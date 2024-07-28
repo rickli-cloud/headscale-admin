@@ -27,7 +27,7 @@
     <Alert.Description>
       {parseStack(error?.stack)}:
 
-      {error?.message}
+      {error?.message || "Internal error"}
 
       {#if error?.code}
         #{error?.code}

@@ -5,25 +5,25 @@
 ![release](https://img.shields.io/github/v/release/rickli-cloud/headscale-admin)
 ![commits_since](https://img.shields.io/github/commits-since/rickli-cloud/headscale-admin/latest)
 
-A fully featured admin UI to manage your headscale instance over the GRPC API unix socket. Built with sveltekit and [Shadcn-svelte](https://shadcn-svelte.com/).
-
-> If you rather want to manage your headscale instance using api keys over the REST API check out [@rickli-cloud/headscale-static-admin](https://www.github.com/rickli-cloud/headscale-static-admin).
+A fully featured admin UI to manage your headscale instance. Built with sveltekit and [Shadcn-svelte](https://shadcn-svelte.com/).
 
 ## Features
 
-Full implementation of the headscale GRPC API. This includes:
+Full implementation of the headscale API. This includes:
 
 - Users
   - Create
-  - Rename
   - Delete
+  - Edit
+    - Name
 - Machines
   - Register
-  - Rename
-  - Edit tags
   - Delete
   - Expire session
-  - Reassign
+  - Edit
+    - Name
+    - Tags
+    - Assigned user
 - Routes
   - Enable / Disable
   - Delete
@@ -33,6 +33,32 @@ Full implementation of the headscale GRPC API. This includes:
 - Api keys
   - Create
   - Expire
+- ACL
+  - Raw
+    - Show
+    - Edit
+  - Hosts
+    - Create
+    - Delete
+    - Edit
+      - Name
+      - Prefix
+      - Comment
+  - Groups
+    - Create
+    - Delete
+    - Edit
+      - name
+      - members
+      - Owned tags
+      - Comment
+  - Access rules
+    - Create
+    - Delete
+    - Edit
+      - From / to targets
+      - Protocol
+      - Comment
 
 ## Documentation
 
@@ -43,7 +69,6 @@ Full implementation of the headscale GRPC API. This includes:
 
 - [**Configuration**](https://github.com/rickli-cloud/headscale-admin/blob/main/docs/configuration.md)
 - [**Deploy**](https://github.com/rickli-cloud/headscale-admin/blob/main/docs/deploy.md)
-- [**FAQ**](https://github.com/rickli-cloud/headscale-admin/blob/main/docs/faq.md)
 
 ## Test it out
 
@@ -54,3 +79,7 @@ git clone https://github.com/rickli-cloud/headscale-admin
 cd headscale-admin
 docker compose up -d
 ```
+
+## Todo's
+
+- Better error handling

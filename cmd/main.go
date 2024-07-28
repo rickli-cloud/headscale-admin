@@ -15,14 +15,18 @@ import (
 func main() {
 	config.Load()
 	
-	if config.Cfg.Socket.Protocol == "unix" {	
-		if !utils.IsSocket(config.Cfg.Socket.Addr) {
-			log.Fatal("Headscale-socket is not a unix socket! Got: ", config.Cfg.Socket.Addr)
+	var grpcServerEndpoint string
+
+	if config.Cfg.Mode == "grpc" {
+		if config.Cfg.Socket.Protocol == "unix" {	
+			if !utils.IsSocket(config.Cfg.Socket.Addr) {
+				log.Fatal("Headscale-socket is not a unix socket! Got: ", config.Cfg.Socket.Addr)
+			}
 		}
+		
+		grpcServerEndpoint = config.Cfg.Socket.Protocol + "://" + config.Cfg.Socket.Addr
+		log.Println("GRPC endpoint:", grpcServerEndpoint)
 	}
-	
-	var grpcServerEndpoint = config.Cfg.Socket.Protocol + "://" + config.Cfg.Socket.Addr
-	log.Println("GRPC endpoint:", grpcServerEndpoint)
 	
 	mux, err := server.Create(context.Background(), &grpcServerEndpoint)
 	if err != nil {

@@ -41,7 +41,7 @@ jobs:
         working-directory: frontend
         run: npm version ${{ github.ref_name }} --no-commit-hooks --no-git-tag-version
 
-      - name: Build application
+      - name: Build frontend
         working-directory: frontend
         run: npm run build
 

@@ -6,7 +6,7 @@
 	import ApikeyList from '$lib/components/apikey/ApikeyList.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 
-	import { PUBLIC_AUTH_ENABLED } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
@@ -24,7 +24,7 @@
 	});
 </script>
 
-{#if PUBLIC_AUTH_ENABLED === "true"}
+{#if env.PUBLIC_DISABLE_TOKEN_AUTH !== "true"}
 <section class="grid items-center space-y-0" style="grid-template-columns: 1fr 100px;">
 	<Card.Header>
 		<Card.Title>End Session</Card.Title>

@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import { stringify, parse } from 'json-ast-comments';
 
 import { base } from '$app/paths';
-import { PUBLIC_AUTH_ENABLED } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { Session, endSession } from '$lib/store/session.js';
 
 import { Api } from './api.js';
@@ -21,19 +21,19 @@ export type * from './index.d.js';
 
 export class Headscale extends Api {
 	constructor(opt?: ApiClientConstructorParameters) {
-		const session = PUBLIC_AUTH_ENABLED === 'true' ? get(Session) : undefined;
+		const session = env.PUBLIC_DISABLE_TOKEN_AUTH === 'true' ? undefined : get(Session);
 		super({
 			...opt,
 			baseUrl: session?.baseUrl,
 			validationWorker: (res, data) => {
-				if (PUBLIC_AUTH_ENABLED !== 'true') return;
+				if (env.PUBLIC_DISABLE_TOKEN_AUTH === 'true') return;
 				if (res.status === 401 || (res.status === 500 && data === 'Unauthorized')) {
 					endSession();
 					window.location.href = base + '/login';
 				}
 			},
 			securityWorker: (cfg) => {
-				if (PUBLIC_AUTH_ENABLED !== 'true') return {};
+				if (env.PUBLIC_DISABLE_TOKEN_AUTH === 'true') return {};
 				return {
 					headers: {
 						...(cfg.headers || {}),

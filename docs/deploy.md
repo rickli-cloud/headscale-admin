@@ -1,19 +1,41 @@
 # Deploy
 
-> [!NOTE]  
-> Headscale had some breaking changes in the latest beta versions. It is recommended to use version `0.22.3` for everything to work properly.
-
 ## Container
 
-The recommended way to deploy headscale-admin.
+The recommended way to deploy headscale-admin is docker. It is possible without but you will have to build everything from scratch.
 
-Example `docker-compose.yaml`:
+### REST API
 
-> No authentication but lets the UI only listen on `127.0.0.1:8080`.
+Due to CORS restrictions you will probably have to use a proxy to make it share the same domain as headscale. The app can be served on `^/admin` to allow for this.
+
+`docker-compose.yaml`:
 
 ```yaml
-version: "3.9" # legacy
-name: headscale
+version: "3.9"
+
+networks:
+  proxy:
+    name: proxy
+    external: true
+
+services:
+  headscale-admin:
+    image: ghcr.io/rickli-cloud/headscale-admin:${HSADM_VERSION:-latest}
+    container_name: headscale-admin
+    pull_policy: always
+    restart: always
+    expose:
+      - 8000
+```
+
+### GRPC API
+
+Make sure to share the headscale UNIX socket over a docker volume. Only thing missing is some sort of authentication.
+
+`docker-compose.yaml`:
+
+```yaml
+version: "3.9"
 
 volumes:
   headscale-data:
@@ -21,7 +43,7 @@ volumes:
 
 services:
   headscale:
-    image: headscale/headscale:0.22.3
+    image: headscale/headscale:${HEADSCALE_VERSION:0.22.3}
     container_name: headscale
     restart: always
     command: headscale serve
@@ -34,14 +56,21 @@ services:
       - 443:443
 
   headscale-admin:
-    image: ghcr.io/rickli-cloud/headscale-admin:latest
+    image: ghcr.io/rickli-cloud/headscale-admin:${HSADM_VERSION:-latest}
     container_name: headscale-admin
     restart: always
     environment:
-      HSADM_CONFIG_PATH: /headscale-config.yaml
+      HSADM_CONFIG_PATH: /headscale.yaml
     volumes:
-      - $PWD/config.yaml:/headscale-config.yaml:ro
+      - $PWD/config.yaml:/headscale.yaml:ro
       - headscale-socket:/var/run/headscale:ro
     ports:
       - 127.0.0.1:8080:8000
 ```
+
+## Version matrix
+
+| Headscale    | Headscale-admin |
+| ------------ | --------------- |
+| 0.22.3       | 1.0.x           |
+| 0.23.0-beta1 | 1.1.0-pre1      |

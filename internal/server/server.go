@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	gw "github.com/rickli-cloud/headscale-admin/gen/headscale/v1-0.23.0-beta1"
+	"github.com/rickli-cloud/headscale-admin/internal/config"
 )
 
 func Create(ctx context.Context, grpcServerEndpoint *string) (*mux.Router, error) {
@@ -21,12 +22,16 @@ func Create(ctx context.Context, grpcServerEndpoint *string) (*mux.Router, error
 	})
   
   grpcMux := runtime.NewServeMux()
-  opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-  if err := gw.RegisterHeadscaleServiceHandlerFromEndpoint(ctx, grpcMux,  *grpcServerEndpoint, opts); err != nil {
-    return nil, err
+  if config.Cfg.Mode == "grpc" {
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+    if err := gw.RegisterHeadscaleServiceHandlerFromEndpoint(ctx, grpcMux,  *grpcServerEndpoint, opts); err != nil {
+      return nil, err
+    }
+
+    router.PathPrefix("/api").Handler(grpcMux)
   }
-  router.PathPrefix("/api").Handler(grpcMux)
   
   var spa SpaHandler
   router.PathPrefix("/").Handler(spa)

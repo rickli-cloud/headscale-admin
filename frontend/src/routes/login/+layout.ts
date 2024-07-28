@@ -1,9 +1,9 @@
 import { base } from '$app/paths';
 import { loadSession } from '$lib/store/session.js';
-import { PUBLIC_AUTH_ENABLED } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 export async function load({}) {
-	if (PUBLIC_AUTH_ENABLED !== 'true' || loadSession()) {
+	if (env.PUBLIC_DISABLE_TOKEN_AUTH === 'true' || loadSession()) {
 		window.location.href = base + '/';
 		return;
 	}

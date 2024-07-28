@@ -1,13 +1,13 @@
 import { redirect } from '@sveltejs/kit';
 
 import { base } from '$app/paths';
-import { PUBLIC_AUTH_ENABLED } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { loadSession } from '$lib/store/session.js';
 import { Acl, Headscale } from '$lib/api/index.js';
 import { AclStore } from '$lib/store/acl.js';
 
 export async function load({ fetch }) {
-	if (PUBLIC_AUTH_ENABLED === 'true' && !loadSession()) {
+	if (env.PUBLIC_DISABLE_TOKEN_AUTH !== 'true' && !loadSession()) {
 		return redirect(302, base + '/login');
 	}
 

@@ -9,11 +9,13 @@ import (
 )
 
 type AppConfiguration struct {
-	Config_path 		string
-	Listen_Addr 		string 			`default:"0.0.0.0:8000" yaml:"admin_listen_addr"`
+	Config_path 	string
+	Listen_Addr 	string	`default:"0.0.0.0:8000" yaml:"admin_listen_addr"`
+	Mode			string 	`default:"auto"`
+	DebugConfig		bool	`default:"true"`
 	Socket struct {
-		Addr 					string 			`yaml:"unix_socket" default:"/var/run/headscale/headscale.sock"`
-		Protocol 			string 			`default:"unix"`
+		Addr 		string	`yaml:"unix_socket" default:"/var/run/headscale/headscale.sock"`
+		Protocol 	string	`default:"unix"`
 	}
 }
 
@@ -22,13 +24,22 @@ var Cfg AppConfiguration
 func Load() AppConfiguration {
 	Cfg.loadEnv()
 
-	if Cfg.Config_path != "" {
+	if len(Cfg.Config_path) > 0 {
 		Cfg.loadYaml(Cfg.Config_path)
 	}
+	
+	if Cfg.Mode != "rest" && Cfg.Mode != "grpc" && Cfg.Mode != "auto" {
+		log.Fatal("Invalid environment variable HSADM_MODE expected auto|rest|grpc got " + Cfg.Mode)
+	}
+	
+	if Cfg.DebugConfig == true {
+		d, _ := yaml.Marshal(Cfg)
+		log.Println("Config debug:\n" + string(d))
+	}
 
-	// Debug config
-	// d, _ := yaml.Marshal(Cfg)
-	// log.Println("Config debug:\n" + string(d))
+	if Cfg.Mode == "auto" && len(Cfg.Socket.Addr) > 0 {
+		Cfg.Mode = "grpc"
+	} 
 
 	return Cfg
 }

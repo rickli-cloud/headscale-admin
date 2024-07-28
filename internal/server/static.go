@@ -7,9 +7,17 @@ import (
 	"path/filepath"
 
 	"github.com/rickli-cloud/headscale-admin/frontend"
+	"github.com/rickli-cloud/headscale-admin/internal/config"
 )
 
 type SpaHandler struct {}
+
+func authDisabled() string {
+	if config.Cfg.Mode == "grpc" {
+		return "true"
+	}
+	return "false"
+}
 
 func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// get the absolute path to prevent directory traversal
@@ -17,6 +25,14 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// if we failed to get the absolute path respond with a 400 bad request and stop
 		http.Error(w, "Internal server error", http.StatusBadRequest)
+		return
+	}
+
+	// if the request is for the environment send them our custom
+	if path == "/admin/_app/env.js" {
+		w.Header().Set("Content-Type", "application/javascript")
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte("export const env={\"PUBLIC_DISABLE_TOKEN_AUTH\":" + authDisabled() +"}"))
 		return
 	}
 
