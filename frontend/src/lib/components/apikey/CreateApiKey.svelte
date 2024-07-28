@@ -11,9 +11,9 @@
 
 	const NewKeyExp = writable<string | undefined>();
 	const NewKeyResult = writable<{ key: string; exp: string } | undefined>();
-	const DisableSubmit = writable<boolean>(false);
+	const disableSubmit = writable<boolean>(false);
 
-	NewKeyResult.subscribe((d) => DisableSubmit.set(!!d));
+	NewKeyResult.subscribe((d) => disableSubmit.set(!!d));
 
 	const dispatch = createEventDispatcher();
 
@@ -41,7 +41,16 @@
 	}
 </script>
 
-<Form.Root onSubmit={handleSubmit} onReset={handleReset} let:disabled {DisableSubmit} DisableReload>
+<Form.Root 
+	description="create API key"
+	action={handleSubmit}
+	on:reset={handleReset} 
+	on:cancel
+	disableSubmit={$disableSubmit} 
+	disableReload
+	disableToast
+	let:disabled 
+>
 	<Form.Item>
 		<Label aria-required for="expiration">Expiration</Label>
 		<Input
@@ -49,7 +58,7 @@
 			id="expiration"
 			type="datetime-local"
 			bind:value={$NewKeyExp}
-			disabled={disabled || $DisableSubmit}
+			disabled={disabled || $disableSubmit}
 		/>
 	</Form.Item>
 </Form.Root>
@@ -57,7 +66,13 @@
 {#if $NewKeyResult}
 	<hr class="spacer" />
 
-	<Form.Root onSubmit={handleFinish} DisableRequiredNote DisableReset SubmitText="Finish">
+	<Form.Root 
+		description="create API key"
+		action={handleFinish} 
+		submitText="Finish"
+		disableCancel
+		disableReset
+	>
 		<div class="space-y-1">
 			<h2 class="text-lg font-semibold text-foreground">Success!</h2>
 			<p class="text-sm text-muted-foreground">
@@ -80,13 +95,11 @@
 			</div>
 		</div>
 
-		<div>
-			<small class="text-sm font-medium leading-none">
-				Expires:
-				<span class="font-bold">
-					{new Date($NewKeyResult.exp).toLocaleString()}
-				</span>
-			</small>
-		</div>
+		<small class="text-sm font-medium leading-none" slot="note">
+			Expires:
+			<span class="font-bold">
+				{new Date($NewKeyResult.exp).toLocaleString()}
+			</span>
+		</small>
 	</Form.Root>
 {/if}

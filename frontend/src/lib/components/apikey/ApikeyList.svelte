@@ -4,12 +4,13 @@
 
 	import DateTime from '$lib/components/general/DateTime.svelte';
 	import Form from '$lib/components/form/form.svelte';
-	import CreateApiKey from './CreateApiKey.svelte';
 	import * as Title from '$lib/components/title';
 	import * as Table from '$lib/components/table';
-
+	
 	import { ApiKey } from '$lib/api';
 	import { isExpired } from '$lib/utils/time';
+
+	import CreateApiKey from './CreateApiKey.svelte';
 
 	export let Keys: ReadOrWritable<ApiKey[]>;
 
@@ -29,13 +30,14 @@
 							title: 'Expire API key',
 							disabled: !key.expiration || isExpired(key.expiration),
 							component: createRender(Form, {
-								DisableRequiredNote: true,
-								SubmitText: 'Expire',
-								DisableReset: true,
-								Destructive: true,
-								onSubmit: async () => {
+								submitText: 'Expire',
+								disableRequired: true,
+								disableReset: true,
+								destructive: true,
+								action: async () => {
 									await key.expire();
-								}
+								},
+								description: "expire API key"
 							})
 						}
 					]
@@ -75,7 +77,7 @@
 		let:close
 	>
 		<Plus slot="trigger" />
-		<CreateApiKey on:submit={close} />
+		<CreateApiKey on:submit={close} on:cancel={close} />
 	</Title.Action>
 </Title.Root>
 

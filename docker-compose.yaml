@@ -28,3 +28,5 @@ services:
       - headscale-socket:/var/run/headscale:ro
     ports:
       - 8000:8000
+    depends_on:
+      - headscale

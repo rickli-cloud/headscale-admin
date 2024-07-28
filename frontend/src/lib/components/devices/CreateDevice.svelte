@@ -9,8 +9,7 @@
 	import * as Form from '$lib/components/form';
 
 	import { invalidateAll } from '$app/navigation';
-	import type { V1User } from '$lib/api/api';
-	import { Machine } from '$lib/api';
+	import { Machine, type V1User } from '$lib/api';
 
 	export let User: string | undefined = '';
 
@@ -40,7 +39,14 @@
 	}
 </script>
 
-<Form.Root onSubmit={handleSubmit} onReset={handleReset} let:disabled let:id>
+<Form.Root
+	description="register device"
+	action={handleSubmit}
+	on:reset={handleReset}
+	on:cancel
+	let:disabled
+	let:id
+>
 	<Form.Item>
 		<SelectUser bind:selected={$SelectedUser} />
 	</Form.Item>

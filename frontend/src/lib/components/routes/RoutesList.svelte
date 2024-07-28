@@ -23,17 +23,18 @@
 				createRender(Table.Actions, {
 					Actions: [
 						{
-							name: route.enabled ? 'Disable' : 'Enable',
-							type: 'sheet',
-							title: (route.enabled ? 'Disable' : 'Enable') + ' route',
-							description: (route.enabled ? 'Disable' : 'Enable') + ' a route for your clients',
+							name: route.enabled ? "Disable" : "Enable",
+							type: "sheet",
+							title: (route.enabled ? "Disable" : "Enable") + " route",
+							description: (route.enabled ? "Disable" : "Enable") + " a route for your clients",
 							component: createRender(Form, {
-								async onSubmit() {
+								description: (route.enabled ? "disable" : "enable") + " route",
+								submitText: route.enabled ? "Disable" : "Enable",
+								disableRequired: true,
+								disableReset: true,
+								async action() {
 									await (route.enabled ? route.disable() : route.enable());
 								},
-								SubmitText: route.enabled ? 'Disable' : 'Enable',
-								DisableRequiredNote: true,
-								DisableReset: true
 							})
 						},
 						{
@@ -43,6 +44,8 @@
 							description: 'This action cannot be undone. Only clients can advertise routes',
 							destructive: true,
 							component: createRender(ConfirmDelete, {
+								description: "delete route",
+								data: route,
 								phrase: route.prefix || route.id || 'route',
 								async onSubmit() {
 									await route.delete();

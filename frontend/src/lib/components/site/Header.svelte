@@ -24,7 +24,7 @@
 	>
 		<nav class="flex flex-nowrap items-center gap-6 text-sm">
 			<a
-				href={base}
+				href={base + "/"}
 				class="font-extrabold"
 				class:!text-foreground={/^(#\/)?$/i.test(document.location.hash)}
 			>
@@ -46,6 +46,15 @@
 						)}
 					>
 						Devices
+					</a>
+					<a
+						href={base + '/acl'}
+						class="whitespace-nowrap"
+						class:!text-foreground={new RegExp('^' + base + '/acl', 'i').test(
+							$page.url.pathname
+						)}
+					>
+						Access control
 					</a>
 				</slot>
 			{/if}

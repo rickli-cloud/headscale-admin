@@ -16,11 +16,12 @@
 	export let user: User | undefined;
 </script>
 
-<Title.Root children={2} Title="User metadata" Description="The metadata of a headscale user">
+<Title.Root Title="User metadata" Description="The metadata of a headscale user">
 	<Title.Action Title="Edit user" Description="This action cannot be undone" let:close>
 		<SquarePen slot="trigger" />
 		<EditName
 			name={user?.name}
+			on:cancel={close}
 			onSubmit={async (username) => {
 				if (user?.name) {
 					await user.rename(username);
@@ -35,6 +36,8 @@
 		<Trash2 class="text-red-600" slot="trigger" />
 		<ConfirmDelete
 			phrase={user?.name || 'user'}
+			data={user}
+			on:cancel={close}
 			onSubmit={async () => {
 				if (user?.name) {
 					await user.delete();

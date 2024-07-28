@@ -9,8 +9,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { cn } from '$lib/utils.js';
 
-	import type { V1User } from '$lib/api/api';
-	import { User } from '$lib/api';
+	import { User, type V1User } from '$lib/api';
 
 	export let users: V1User[] | undefined = undefined;
 	export let selected: V1User | undefined = undefined;

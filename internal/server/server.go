@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	gw "github.com/rickli-cloud/headscale-admin/headscale/v1-0.22.3"
+	gw "github.com/rickli-cloud/headscale-admin/gen/headscale/v1-0.23.0-beta1"
 )
 
 func Create(ctx context.Context, grpcServerEndpoint *string) (*mux.Router, error) {

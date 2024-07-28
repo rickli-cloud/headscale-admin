@@ -1,68 +1,108 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { createEventDispatcher } from "svelte";
+	import { writable } from "svelte/store";
+	import { toast } from "svelte-sonner";
+	import Check from "lucide-svelte/icons/check";
+	import X from "lucide-svelte/icons/x";
+
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { createEventDispatcher } from 'svelte';
-	import { writable, type Writable } from 'svelte/store';
 
-	export let onSubmit: () => void | Promise<void>;
-	export let onReset: () => void = () => void 0;
+	import { invalidateAll } from "$app/navigation";
+	import type { Props } from "./index";
+	import { cn } from "$lib/utils";
+	import { ApiError } from "$lib/api/client";
 
-	export let id: string = window.crypto.randomUUID();
-	export let DisableRequiredNote: boolean = false;
-	export let DisableSubmit: Writable<boolean> = writable(false);
-	export let DisableReset: boolean = false;
-	export let DisableReload: boolean = false;
-	export let Destructive: boolean = false;
-	export let SubmitText: string = 'Submit';
+  type $$Props = Props;
 
-	const Disabled = writable<boolean>();
-	const dispatch = createEventDispatcher();
+  export let action: $$Props["action"];
+  export let description: $$Props["description"] = "complete action";
+  export let id: $$Props["id"] = window.crypto.randomUUID();
+	export let disableRequired: $$Props["disableRequired"] = false;
+	export let disableActions: $$Props["disableActions"] = false;
+	export let disableSubmit: $$Props["disableSubmit"] = false;
+	export let disableReload: $$Props["disableReload"] = false;
+	export let disableCancel: $$Props["disableCancel"] = false;
+	export let disableToast: $$Props["disableToast"] = false;
+	export let disableReset: $$Props["disableReset"] = false;
+	export let destructive: $$Props["destructive"] = false;
+	export let submitText: $$Props["submitText"] = 'Submit';
+	export let resetText: $$Props["resetText"] = 'Reset';
+	export let cancelText: $$Props["cancelText"] = 'Cancel';
 
-	async function handleSubmit() {
-		dispatch('submit');
-		try {
-			Disabled.set(true);
-			await onSubmit();
-			if (!DisableReload) await invalidateAll();
-			onReset();
-		} catch (err) {
-			throw err;
-		} finally {
-			Disabled.set(false);
-		}
-	}
+  const dispatch = createEventDispatcher()
+  const Disabled = writable(false)
 
-	function handleReset() {
-		dispatch('reset');
-		onReset();
-	}
+  async function handleSubmit(ev: Event) {
+    try {
+      await action();
+    } catch (err) {
+			console.error(err);
+      dispatch("error", err);
+
+			const errorMessage = err instanceof ApiError && typeof err.code !== "undefined"
+				? `#${err.code} ${err.toString()}`
+				: err instanceof Error
+				? err.toString()
+				: err;
+
+      toast(
+        "Failed to " + description + ": " + errorMessage,
+        { class: "!bg-red-600 !text-white", icon: X }
+      );
+
+      return;
+    }
+
+    if (!disableReload) await invalidateAll();
+
+    if (!disableToast) toast("Successful: " + description, { class: "!bg-green-600 !text-white", icon: Check });
+    
+    dispatch("submit", ev);
+  }
 </script>
 
 <form
-	{id}
-	on:submit|preventDefault={handleSubmit}
-	on:reset|preventDefault={handleReset}
-	class="grid w-full items-center gap-5"
+  id={"form-" + id}
+	class={cn("w-full grid items-center gap-5", $$restProps["class"])}
+  {...$$restProps}
+  on:submit={handleSubmit}
+  on:reset
+  on:cancel
 >
-	<slot disabled={$Disabled} {id} submit={handleSubmit} reset={handleReset} />
+  <slot {id} submit={handleSubmit} disabled={$Disabled} />
 
-	<div class="mt-4 flex justify-between gap-3 first:mt-0">
-		{#if !DisableRequiredNote}
-			<p class="star-note self-start text-xs text-muted-foreground">Required</p>
-		{:else}
-			<div />
-		{/if}
-		<div class="flex gap-3">
-			{#if !DisableReset}
-				<Button variant="outline" type="reset" disabled={$Disabled}>Reset</Button>
-			{/if}
-			<Button
-				type="submit"
-				disabled={$Disabled || $DisableSubmit}
-				variant={Destructive ? 'destructive' : 'default'}
-			>
-				{SubmitText}
-			</Button>
+	{#if !disableActions}
+		<div 
+			class="mt-4 flex justify-between items-center gap-3 first:mt-0"
+			class:!justify-end={disableRequired}
+		>
+			<slot name="note">
+				{#if !disableRequired}
+					<p class="star-note self-start text-xs text-muted-foreground">Required</p>
+				{/if}
+			</slot>
+
+			<div class="flex gap-2">
+				{#if !disableCancel}
+					<Button variant="outline" on:click={(ev) => dispatch("cancel", ev)}>
+						{cancelText}
+					</Button>
+				{/if}
+
+				{#if !disableReset}
+					<Button variant="outline" type="reset" disabled={$Disabled}>
+						{resetText}
+					</Button>
+				{/if}
+
+				<Button
+					type="submit"
+					disabled={$Disabled || disableSubmit}
+					variant={destructive ? 'destructive' : 'default'}
+				>
+					{submitText}
+				</Button>
+			</div>
 		</div>
-	</div>
+	{/if}
 </form>

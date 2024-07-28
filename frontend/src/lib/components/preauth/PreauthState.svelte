@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge';
 
-	import type { V1PreAuthKey } from '$lib/api/api';
+	import type { V1PreAuthKey } from '$lib/api';
 
 	export let Key: V1PreAuthKey;
 </script>

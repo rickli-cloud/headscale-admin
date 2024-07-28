@@ -1,18 +1,19 @@
 FROM golang:latest as build
 
-LABEL maintainer=github/rickli-cloud
-
 WORKDIR /work
 
 COPY . .
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
+ENV GOARCH=$TARGETARCH
 
-RUN GOARCH=$TARGETARCH go build $PWD/cmd/main.go
+RUN go build $PWD/cmd/main.go
 
 
 FROM scratch
+
+LABEL maintainer=github/rickli-cloud
 
 COPY --from=build /work/main /hsadm
 

@@ -3,13 +3,11 @@
 
 	export let Title: string;
 	export let Description: string | undefined = undefined;
-
-	export let children: number = 1;
 </script>
 
 <Card.Header
-	class="grid items-center gap-2 space-y-0"
-	style="grid-template-columns: 1fr repeat({children}, 50px);"
+	class="grid items-center gap-3 space-y-0"
+	style="grid-template-columns: 1fr auto;"
 >
 	<div class="space-y-1.5">
 		<Card.Title>{Title}</Card.Title>
@@ -18,5 +16,7 @@
 		{/if}
 	</div>
 
-	<slot />
+	<div class="flex gap-2">
+		<slot />
+	</div>
 </Card.Header>

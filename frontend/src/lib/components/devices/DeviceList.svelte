@@ -6,16 +6,17 @@
 	import DetailedInfo from '$lib/components/general/DetailedInfo.svelte';
 	import DateTime from '$lib/components/general/DateTime.svelte';
 	import List from '$lib/components/general/List.svelte';
+	import Tags from '$lib/components/general/Tags.svelte';
+	import Form from '$lib/components/form/form.svelte';
+	import * as Title from '$lib/components/title';
+	import * as Table from '$lib/components/table';
+	
+	import { isExpired } from '$lib/utils/time';
+	import type { Machine } from '$lib/api';
+
 	import DeviceStatus from './DeviceStatus.svelte';
 	import CreateDevice from './CreateDevice.svelte';
 	import EditDevice from './EditDevice.svelte';
-	import * as Title from '$lib/components/title';
-	import * as Table from '$lib/components/table';
-
-	import { isExpired } from '$lib/utils/time';
-	import Form from '../form/form.svelte';
-	import type { Machine } from '$lib/api';
-	import Tags from '../general/Tags.svelte';
 
 	export let Machines: ReadOrWritable<Machine[]>;
 	export let User: string | undefined = undefined;
@@ -48,13 +49,14 @@
 							disabled: isExpired(machine.expiry as string),
 							destructive: true,
 							component: createRender(Form, {
-								async onSubmit() {
+								description: "expire device session",
+								submitText: 'Expire',
+								disableRequired: true,
+								disableReset: true,
+								destructive: true,
+								async action() {
 									await machine.expire();
 								},
-								SubmitText: 'Expire',
-								Destructive: true,
-								DisableRequiredNote: true,
-								DisableReset: true
 							})
 						},
 						{
@@ -65,6 +67,7 @@
 							destructive: true,
 							component: createRender(ConfirmDelete, {
 								phrase: machine.givenName || machine.name || 'machine',
+								data: machine,
 								async onSubmit() {
 									await machine.delete();
 								}
@@ -135,7 +138,7 @@
 		let:close
 	>
 		<Plus slot="trigger" />
-		<CreateDevice on:submit={close} {User} />
+		<CreateDevice on:submit={close} on:cancel={close} {User} />
 	</Title.Action>
 </Title.Root>
 

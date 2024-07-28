@@ -7,8 +7,8 @@ volumes:
 services:
   headscale:
     container_name: headscale
-    image: headscale/headscale:${HEADSCALE_VERSION:-0.22.3}
-    command: headscale serve
+    image: headscale/headscale:${HEADSCALE_VERSION:-0.23.0-beta1}
+    command: serve
     restart: always
     # pull_policy: always
     volumes:
@@ -16,26 +16,31 @@ services:
       - headscale-data:/var/lib/headscale:rw
       - headscale-socket:/var/run/headscale:rw
 
-  headscale-admin:
-    container_name: headscale-admin-backend
+  hsadm:
+    container_name: hsadm-backend
+    image: hsadm:dev
+    pull_policy: never
     restart: always
-    image: headscale-admin-backend:latest
     # build:
     #   context: .
     #   dockerfile: .devcontainer/Dockerfile.backend
     ports:
       - 8000:8000/tcp
-      - 5173:5713/tcp # frontend
+      # - 5173:5713/tcp # frontend
     volumes:
       # - .:/work:cached
       - headscale-socket:/var/run/headscale:ro
+    depends_on:
+      - headscale
 
   headscale-admin-dev:
     container_name: headscale-admin-frontend
     restart: always
-    network_mode: service:headscale-admin # share a network stack with the backend
+    network_mode: service:hsadm # share a network stack with the backend
     build:
       context: ./frontend
       dockerfile: ../.devcontainer/Dockerfile.frontend
     volumes:
       - ./frontend:/work:cached
+    depends_on:
+      - hsadm

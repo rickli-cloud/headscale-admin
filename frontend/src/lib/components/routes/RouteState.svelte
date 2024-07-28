@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge';
 
-	import type { V1Route } from '$lib/api/api';
+	import type { V1Route } from '$lib/api';
 
 	export let route: V1Route;
 </script>

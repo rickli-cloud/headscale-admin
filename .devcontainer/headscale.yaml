@@ -152,6 +152,10 @@ database:
   sqlite:
     path: /var/lib/headscale/db.sqlite
 
+    # Enable WAL mode for SQLite. This is recommended for production environments.
+    # https://www.sqlite.org/wal.html
+    write_ahead_log: true
+
   # # Postgres config
   # postgres:
   #   # If using a Unix socket to connect to Postgres, set the socket path in the 'host' field and leave 'port' blank.
@@ -207,10 +211,17 @@ log:
   format: text
   level: debug
 
-# Path to a file containg ACL policies.
-# ACLs can be defined as YAML or HUJSON.
-# https://tailscale.com/kb/1018/acls/
-acl_policy_path: ""
+## Policy
+# headscale supports Tailscale's ACL policies.
+# Please have a look to their KB to better
+# understand the concepts: https://tailscale.com/kb/1018/acls/
+policy:
+  # The mode can be "file" or "database" that defines
+  # where the ACL policies are stored and read from.
+  mode: database
+  # If the mode is set to "file", the path to a
+  # HuJSON file containing ACL policies.
+  path: ""
 
 ## DNS
 #
@@ -268,6 +279,15 @@ dns_config:
   # Whether to use [MagicDNS](https://tailscale.com/kb/1081/magicdns/).
   # Only works if there is at least a nameserver defined.
   magic_dns: true
+
+  # DEPRECATED
+  # Use the username as part of the DNS name for nodes, with this option enabled:
+  # node1.username.example.com
+  # while when this is disabled:
+  # node1.example.com
+  # This is a legacy option as Headscale has have this wrongly implemented
+  # while in upstream Tailscale, the username is not included.
+  use_username_in_magic_dns: false
 
   # Defines the base domain to create the hostnames for MagicDNS.
   # `base_domain` must be a FQDNs, without the trailing dot.

@@ -8,9 +8,8 @@
 	import EditTags from '$lib/components/general/EditTags.svelte';
 	import * as Form from '$lib/components/form';
 
-	import type { V1User } from '$lib/api/api';
 	import { createEventDispatcher } from 'svelte';
-	import type { Machine } from '$lib/api';
+	import type { Machine, V1User } from '$lib/api';
 
 	export let machine: Machine;
 
@@ -43,7 +42,13 @@
 	}
 </script>
 
-<Form.Root {onSubmit} let:disabled SubmitText="Save">
+<Form.Root 
+	description="edit device"
+	action={onSubmit}
+	on:cancel
+	submitText="Save"
+	let:disabled
+>
 	<Form.Item>
 		<Label aria-required for="name">Name</Label>
 		<Input required id="name" bind:value={$MachineName} {disabled} />

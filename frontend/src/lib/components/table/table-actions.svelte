@@ -35,7 +35,7 @@
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger asChild let:builder>
-		<Button builders={[builder]} class=" h-[50px] w-full" variant="ghost">
+		<Button builders={[builder]} class="h-[50px] w-full" variant="ghost">
 			<DotsHorizontal />
 		</Button>
 	</DropdownMenu.Trigger>
@@ -66,11 +66,12 @@
 								close();
 								// window.location.reload();
 							}}
+							on:cancel={close}
 						/>
 					</TableActionSheet>
 				{:else if action.type === 'href'}
 					<DropdownMenu.Item
-						href={base + '/' + action.href}
+						href={base + action.href}
 						class={action.destructive ? 'text-red-600' : ''}
 						disabled={action.disabled}
 					>

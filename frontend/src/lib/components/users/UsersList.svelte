@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createRender, createTable, type ReadOrWritable } from 'svelte-headless-table';
-	import { Plus } from 'svelte-radix';
+	import Plus from 'svelte-radix/Plus.svelte';
 
 	import ConfirmDelete from '$lib/components/general/ConfirmDelete.svelte';
 	import EditName from '$lib/components/general/EditName.svelte';
@@ -11,6 +11,7 @@
 
 	import { base } from '$app/paths';
 	import type { User } from '$lib/api';
+	import { parseValue } from '$lib/utils/misc';
 
 	export let Users: ReadOrWritable<User[]>;
 
@@ -25,7 +26,7 @@
 						{
 							name: 'Show',
 							type: 'href',
-							href: base + '/users/' + user.name
+							href: '/users/' + user.name
 						},
 						{
 							name: 'Edit',
@@ -33,6 +34,7 @@
 							title: 'Edit user',
 							description: 'Change the name of a user',
 							component: createRender(EditName, {
+								description: "edit user",
 								name: user.name,
 								async onSubmit(username) {
 									await user.rename(username);
@@ -46,7 +48,9 @@
 							title: 'Delete user',
 							description: 'This action can not be undone',
 							component: createRender(ConfirmDelete, {
-								phrase: user.name || '',
+								description: "delete user",
+								phrase: user.name,
+								data: { ...user, id: Number(user.id), createdAt: parseValue(user.createdAt, created => new Date(created).toLocaleString()) },
 								async onSubmit() {
 									await user.delete();
 								}
@@ -78,7 +82,7 @@
 		let:close
 	>
 		<Plus slot="trigger" />
-		<CreateUser on:submit={close} />
+		<CreateUser on:submit={close} on:cancel={close} />
 	</Title.Action>
 </Title.Root>
 

@@ -5,14 +5,15 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
+	
+	import { tagRegex } from '$lib/api';
 
 	export let tags: string[];
 	export let DisableTitle: boolean = false;
-	// export let Tags: Writable<Set<string>>;
+	export let title = "Tags"
 
 	const TagInput = writable<string | undefined>();
-	const tagRegex = /^tag:/;
-	const NewTags = writable(new Set<string>(...tags));
+	const NewTags = writable(new Set<string>(tags.map(i => i.replace(tagRegex, ""))));
 	NewTags.subscribe((data) => (tags = [...data].map((i) => (tagRegex.test(i) ? i : 'tag:' + i))));
 
 	function handleAdd() {
@@ -30,7 +31,7 @@
 </script>
 
 {#if !DisableTitle}
-	<p class="text-sm font-medium">Tags</p>
+	<p class="text-sm font-medium">{title}</p>
 {/if}
 
 <form

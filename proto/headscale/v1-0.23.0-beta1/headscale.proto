@@ -1,0 +1,655 @@
+syntax = "proto3";
+package headscale.v1;
+option  go_package = "github.com/juanfont/headscale/gen/go/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+//
+// headscale.proto
+//
+
+service HeadscaleService {
+    // --- User start ---
+    rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/user/{name}"
+        };
+    }
+
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/user"
+            body: "*"
+        };
+    }
+
+    rpc RenameUser(RenameUserRequest) returns (RenameUserResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/user/{old_name}/rename/{new_name}"
+        };
+    }
+
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/user/{name}"
+        };
+    }
+
+    rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/user"
+        };
+    }
+    // --- User end ---
+
+    // --- PreAuthKeys start ---
+    rpc CreatePreAuthKey(CreatePreAuthKeyRequest) returns (CreatePreAuthKeyResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/preauthkey"
+            body: "*"
+        };
+    }
+
+    rpc ExpirePreAuthKey(ExpirePreAuthKeyRequest) returns (ExpirePreAuthKeyResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/preauthkey/expire"
+            body: "*"
+        };
+    }
+
+    rpc ListPreAuthKeys(ListPreAuthKeysRequest) returns (ListPreAuthKeysResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/preauthkey"
+        };
+    }
+    // --- PreAuthKeys end ---
+
+    // --- Node start ---
+    rpc DebugCreateNode(DebugCreateNodeRequest) returns (DebugCreateNodeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/debug/node"
+            body: "*"
+        };
+    }
+
+    rpc GetNode(GetNodeRequest) returns (GetNodeResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/node/{node_id}"
+        };
+    }
+
+    rpc SetTags(SetTagsRequest) returns (SetTagsResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/node/{node_id}/tags"
+            body: "*"
+        };
+    }
+
+    rpc RegisterNode(RegisterNodeRequest) returns (RegisterNodeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/node/register"
+        };
+    }
+
+    rpc DeleteNode(DeleteNodeRequest) returns (DeleteNodeResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/node/{node_id}"
+        };
+    }
+
+    rpc ExpireNode(ExpireNodeRequest) returns (ExpireNodeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/node/{node_id}/expire"
+        };
+    }
+
+    rpc RenameNode(RenameNodeRequest) returns (RenameNodeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/node/{node_id}/rename/{new_name}"
+        };
+    }
+
+    rpc ListNodes(ListNodesRequest) returns (ListNodesResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/node"
+        };
+    }
+
+    rpc MoveNode(MoveNodeRequest) returns (MoveNodeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/node/{node_id}/user"
+        };
+    }
+
+    rpc BackfillNodeIPs(BackfillNodeIPsRequest) returns (BackfillNodeIPsResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/node/backfillips"
+        };
+    }
+
+    // --- Node end ---
+
+    // --- Route start ---
+    rpc GetRoutes(GetRoutesRequest) returns (GetRoutesResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/routes"
+        };
+    }
+
+    rpc EnableRoute(EnableRouteRequest) returns (EnableRouteResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/routes/{route_id}/enable"
+        };
+    }
+
+    rpc DisableRoute(DisableRouteRequest) returns (DisableRouteResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/routes/{route_id}/disable"
+        };
+    }
+
+    rpc GetNodeRoutes(GetNodeRoutesRequest) returns (GetNodeRoutesResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/node/{node_id}/routes"
+        };
+    }
+
+    rpc DeleteRoute(DeleteRouteRequest) returns (DeleteRouteResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/routes/{route_id}"
+        };
+    }
+
+    // --- Route end ---
+
+    // --- ApiKeys start ---
+    rpc CreateApiKey(CreateApiKeyRequest) returns (CreateApiKeyResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/apikey"
+            body: "*"
+        };
+    }
+
+    rpc ExpireApiKey(ExpireApiKeyRequest) returns (ExpireApiKeyResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/apikey/expire"
+            body: "*"
+        };
+    }
+
+    rpc ListApiKeys(ListApiKeysRequest) returns (ListApiKeysResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/apikey"
+        };
+    }
+
+    rpc DeleteApiKey(DeleteApiKeyRequest) returns (DeleteApiKeyResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/apikey/{prefix}"
+        };
+    }
+    // --- ApiKeys end ---
+
+    // --- Policy start ---
+    rpc GetPolicy(GetPolicyRequest) returns (GetPolicyResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/policy"
+        };
+    }
+
+    rpc SetPolicy(SetPolicyRequest) returns (SetPolicyResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/policy"
+            body: "*"
+        };
+    }
+    // --- Policy end ---
+
+
+    // Implement Tailscale API
+    // rpc GetDevice(GetDeviceRequest) returns(GetDeviceResponse) {
+    //     option(google.api.http) = {
+    //         get : "/api/v1/device/{id}"
+    //     };
+    // }
+
+    // rpc DeleteDevice(DeleteDeviceRequest) returns(DeleteDeviceResponse) {
+    //     option(google.api.http) = {
+    //         delete : "/api/v1/device/{id}"
+    //     };
+    // }
+
+    // rpc GetDeviceRoutes(GetDeviceRoutesRequest) returns(GetDeviceRoutesResponse) {
+    //     option(google.api.http) = {
+    //         get : "/api/v1/device/{id}/routes"
+    //     };
+    // }
+
+    // rpc EnableDeviceRoutes(EnableDeviceRoutesRequest) returns(EnableDeviceRoutesResponse) {
+    //     option(google.api.http) = {
+    //         post : "/api/v1/device/{id}/routes"
+    //     };
+    // }
+}
+
+//
+// apikey.proto
+//
+
+message ApiKey {
+    uint64                    id         = 1;
+    string                    prefix     = 2;
+    google.protobuf.Timestamp expiration = 3;
+    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp last_seen  = 5;
+}
+
+message CreateApiKeyRequest {
+    google.protobuf.Timestamp expiration = 1;
+}
+
+message CreateApiKeyResponse {
+    string api_key = 1;
+}
+
+message ExpireApiKeyRequest {
+    string prefix = 1;
+}
+
+message ExpireApiKeyResponse {
+}
+
+message ListApiKeysRequest {
+}
+
+message ListApiKeysResponse {
+    repeated ApiKey api_keys = 1;
+}
+
+message DeleteApiKeyRequest {
+    string prefix = 1;
+}
+
+message DeleteApiKeyResponse {
+}
+
+//
+// device.proto
+//
+
+// This is a potential reimplementation of Tailscale's API
+// https://github.com/tailscale/tailscale/blob/main/api.md
+
+message Latency {
+    float latency_ms = 1;
+    bool  preferred  = 2;
+}
+
+message ClientSupports {
+    bool hair_pinning = 1;
+    bool ipv6         = 2;
+    bool pcp          = 3;
+    bool pmp          = 4;
+    bool udp          = 5;
+    bool upnp         = 6;
+}
+
+message ClientConnectivity {
+    repeated string      endpoints                 = 1;
+    string               derp                      = 2;
+    bool                 mapping_varies_by_dest_ip = 3;
+    map<string, Latency> latency                   = 4;
+    ClientSupports       client_supports           = 5;
+}
+
+message GetDeviceRequest {
+    string id = 1;
+}
+
+message GetDeviceResponse {
+    repeated string           addresses                   = 1;
+    string                    id                          = 2;
+    string                    user                        = 3;
+    string                    name                        = 4;
+    string                    hostname                    = 5;
+    string                    client_version              = 6;
+    bool                      update_available            = 7;
+    string                    os                          = 8;
+    google.protobuf.Timestamp created                     = 9;
+    google.protobuf.Timestamp last_seen                   = 10;
+    bool                      key_expiry_disabled         = 11;
+    google.protobuf.Timestamp expires                     = 12;
+    bool                      authorized                  = 13;
+    bool                      is_external                 = 14;
+    string                    machine_key                 = 15;
+    string                    node_key                    = 16;
+    bool                      blocks_incoming_connections = 17;
+    repeated string           enabled_routes              = 18;
+    repeated string           advertised_routes           = 19;
+    ClientConnectivity        client_connectivity         = 20;
+}
+
+message DeleteDeviceRequest {
+    string id = 1;
+}
+
+message DeleteDeviceResponse {
+}
+
+message GetDeviceRoutesRequest {
+    string id = 1;
+}
+
+message GetDeviceRoutesResponse {
+    repeated string enabled_routes    = 1;
+    repeated string advertised_routes = 2;
+}
+
+message EnableDeviceRoutesRequest {
+    string          id     = 1;
+    repeated string routes = 2;
+}
+
+message EnableDeviceRoutesResponse {
+    repeated string enabled_routes    = 1;
+    repeated string advertised_routes = 2;
+}
+
+//
+// node.proto
+//
+
+enum RegisterMethod {
+    REGISTER_METHOD_UNSPECIFIED = 0;
+    REGISTER_METHOD_AUTH_KEY    = 1;
+    REGISTER_METHOD_CLI         = 2;
+    REGISTER_METHOD_OIDC        = 3;
+}
+
+message Node {
+    // 9: removal of last_successful_update
+    reserved 9;
+
+    uint64          id           = 1;
+    string          machine_key  = 2;
+    string          node_key     = 3;
+    string          disco_key    = 4;
+    repeated string ip_addresses = 5;
+    string          name         = 6;
+    User            user         = 7;
+
+    google.protobuf.Timestamp last_seen = 8;
+    google.protobuf.Timestamp expiry    = 10;
+
+    PreAuthKey pre_auth_key = 11;
+
+    google.protobuf.Timestamp created_at = 12;
+
+    RegisterMethod register_method = 13;
+
+    reserved 14 to 17;
+    // google.protobuf.Timestamp updated_at = 14;
+    // google.protobuf.Timestamp deleted_at = 15;
+
+    // bytes host_info      = 15;
+    // bytes endpoints      = 16;
+    // bytes enabled_routes = 17;
+
+    repeated string forced_tags  = 18;
+    repeated string invalid_tags = 19;
+    repeated string valid_tags   = 20;
+    string          given_name   = 21;
+    bool            online       = 22;
+}
+
+message RegisterNodeRequest {
+    string user = 1;
+    string key  = 2;
+}
+
+message RegisterNodeResponse {
+    Node node = 1;
+}
+
+message GetNodeRequest {
+    uint64 node_id = 1;
+}
+
+message GetNodeResponse {
+    Node node = 1;
+}
+
+message SetTagsRequest {
+    uint64          node_id = 1;
+    repeated string tags    = 2;
+}
+
+message SetTagsResponse {
+    Node node = 1;
+}
+
+message DeleteNodeRequest {
+    uint64 node_id = 1;
+}
+
+message DeleteNodeResponse {}
+
+message ExpireNodeRequest {
+    uint64 node_id = 1;
+}
+
+message ExpireNodeResponse {
+    Node node = 1;
+}
+
+message RenameNodeRequest {
+    uint64 node_id  = 1;
+    string new_name = 2;
+}
+
+message RenameNodeResponse {
+    Node node = 1;
+}
+
+message ListNodesRequest {
+    string user = 1;
+}
+
+message ListNodesResponse {
+    repeated Node nodes = 1;
+}
+
+message MoveNodeRequest {
+    uint64 node_id = 1;
+    string user    = 2;
+}
+
+message MoveNodeResponse {
+    Node node = 1;
+}
+
+message DebugCreateNodeRequest {
+    string          user   = 1;
+    string          key    = 2;
+    string          name   = 3;
+    repeated string routes = 4;
+}
+
+message DebugCreateNodeResponse {
+    Node node = 1;
+}
+
+message BackfillNodeIPsRequest {
+    bool confirmed = 1;
+}
+
+message BackfillNodeIPsResponse {
+    repeated string changes = 1;
+}
+
+//
+// policy.proto
+//
+
+message SetPolicyRequest {
+  string policy = 1;
+}
+
+message SetPolicyResponse {
+  string                    policy = 1;
+  google.protobuf.Timestamp updated_at = 2;
+}
+
+message GetPolicyRequest {}
+
+message GetPolicyResponse {
+  string                    policy = 1;
+  google.protobuf.Timestamp updated_at = 2;
+}
+//
+// preauthkey.proto
+//
+
+message PreAuthKey {
+    string                    user       = 1;
+    string                    id         = 2;
+    string                    key        = 3;
+    bool                      reusable   = 4;
+    bool                      ephemeral  = 5;
+    bool                      used       = 6;
+    google.protobuf.Timestamp expiration = 7;
+    google.protobuf.Timestamp created_at = 8;
+    repeated string           acl_tags   = 9;
+}
+
+message CreatePreAuthKeyRequest {
+    string                    user       = 1;
+    bool                      reusable   = 2;
+    bool                      ephemeral  = 3;
+    google.protobuf.Timestamp expiration = 4;
+    repeated string           acl_tags   = 5;
+}
+
+message CreatePreAuthKeyResponse {
+    PreAuthKey pre_auth_key = 1;
+}
+
+message ExpirePreAuthKeyRequest {
+    string user = 1;
+    string key  = 2;
+}
+
+message ExpirePreAuthKeyResponse {
+}
+
+message ListPreAuthKeysRequest {
+    string user = 1;
+}
+
+message ListPreAuthKeysResponse {
+    repeated PreAuthKey pre_auth_keys = 1;
+}
+
+//
+// routes.proto
+//
+
+message Route {
+    uint64 id         = 1;
+    Node   node       = 2;
+    string prefix     = 3;
+    bool   advertised = 4;
+    bool   enabled    = 5;
+    bool   is_primary = 6;
+
+    google.protobuf.Timestamp created_at = 7;
+    google.protobuf.Timestamp updated_at = 8;
+    google.protobuf.Timestamp deleted_at = 9;
+}
+
+message GetRoutesRequest {
+}
+
+message GetRoutesResponse {
+    repeated Route routes = 1;
+}
+
+message EnableRouteRequest {
+    uint64 route_id = 1;
+}
+
+message EnableRouteResponse {
+}
+
+message DisableRouteRequest {
+    uint64 route_id = 1;
+}
+
+message DisableRouteResponse {
+}
+
+message GetNodeRoutesRequest {
+    uint64 node_id = 1;
+}
+
+message GetNodeRoutesResponse {
+    repeated Route routes = 1;
+}
+
+message DeleteRouteRequest {
+    uint64 route_id = 1;
+}
+
+message DeleteRouteResponse {
+}
+
+//
+// user.proto
+//
+
+message User {
+    string                    id         = 1;
+    string                    name       = 2;
+    google.protobuf.Timestamp created_at = 3;
+}
+
+message GetUserRequest {
+    string name = 1;
+}
+
+message GetUserResponse {
+    User user = 1;
+}
+
+message CreateUserRequest {
+    string name = 1;
+}
+
+message CreateUserResponse {
+    User user = 1;
+}
+
+message RenameUserRequest {
+    string old_name = 1;
+    string new_name = 2;
+}
+
+message RenameUserResponse {
+    User user = 1;
+}
+
+message DeleteUserRequest {
+    string name = 1;
+}
+
+message DeleteUserResponse {
+}
+
+message ListUsersRequest {
+}
+
+message ListUsersResponse {
+    repeated User users = 1;
+}
+

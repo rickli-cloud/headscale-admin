@@ -33,13 +33,14 @@
 							title: 'Expire preAuth key',
 							description: 'Make the key unusable. This action cannot be undone',
 							component: createRender(Form, {
-								async onSubmit() {
+								description: "expire preauth key",
+								submitText: 'Expire',
+								disableRequired: true,
+								disableReset: true,
+								destructive: true,
+								async action() {
 									await key.expire();
 								},
-								SubmitText: 'Expire',
-								Destructive: true,
-								DisableRequiredNote: true,
-								DisableReset: true
 							})
 						}
 					]
@@ -85,7 +86,7 @@
 			let:close
 		>
 			<Plus slot="trigger" />
-			<CreatePreauth {User} on:submit={close} />
+			<CreatePreauth {User} on:submit={close} on:cancel={close} />
 		</Title.Action>
 	{/if}
 </Title.Root>

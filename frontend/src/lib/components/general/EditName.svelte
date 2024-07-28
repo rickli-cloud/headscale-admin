@@ -8,6 +8,7 @@
 	import * as Form from '$lib/components/form';
 
 	export let name: string | undefined = undefined;
+	export let description: string = "edit " + name
 	export let onSubmit: (name: string) => void | Promise<void>;
 
 	const NewName = writable<string>(name || '');
@@ -26,7 +27,14 @@
 	}
 </script>
 
-<Form.Root onSubmit={handleSubmit} onReset={handleReset} let:disabled SubmitText="Save">
+<Form.Root 
+	{description}
+	submitText="Save"
+	action={handleSubmit}
+	on:reset={handleReset}
+	on:cancel
+	let:disabled
+>
 	<Form.Item>
 		<Label aria-required for="name">Name</Label>
 		<Input required id="name" bind:value={$NewName} {disabled} />

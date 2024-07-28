@@ -19,8 +19,9 @@ export function formatDuration(ms: number, includeMs: boolean = false): string {
 	if (includeMs) time.ms = Math.floor(ms) % 1000;
 
 	return Object.entries(time)
-		.filter((val) => val[1] !== 0)
+		.filter(([_, val]) => val !== 0)
 		.map(([key, val]) => `${val}${key}`)
+		.slice(0, 3) // Max 3 units
 		.join(', ');
 }
 

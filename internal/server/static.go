@@ -11,11 +11,6 @@ import (
 
 type SpaHandler struct {}
 
-var (
-	staticPath 	string = "build"
-	indexPath		string = "index.html"
-)
-
 func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// get the absolute path to prevent directory traversal
 	path, err := filepath.Abs(r.URL.Path)
@@ -26,11 +21,11 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// prepend the path with the path to the static directory
-	path = filepath.Join(staticPath, path)
+	path = filepath.Join(frontend.StaticPath, path)
 	_, err = frontend.Folder.Open(path)
 	
 	if os.IsNotExist(err) || path == "build" {
-		index, err := frontend.Folder.ReadFile(filepath.Join(staticPath, indexPath))
+		index, err := frontend.Folder.ReadFile(filepath.Join(frontend.StaticPath, frontend.IndexPath))
 		if err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
@@ -50,7 +45,7 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get the subdirectory of the static dir
-	statics, err := fs.Sub(frontend.Folder, staticPath)
+	statics, err := fs.Sub(frontend.Folder, frontend.StaticPath)
 	// otherwise, use http.FileServer to serve the static dir
 	http.FileServer(http.FS(statics)).ServeHTTP(w, r)
 }

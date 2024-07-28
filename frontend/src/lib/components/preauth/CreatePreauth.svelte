@@ -9,8 +9,7 @@
 	import EditTags from '$lib/components/general/EditTags.svelte';
 	import * as Form from '$lib/components/form';
 
-	import { PreAuthKey } from '$lib/api';
-	import type { V1CreatePreAuthKeyRequest } from '$lib/api/api';
+	import { PreAuthKey, type V1CreatePreAuthKeyRequest } from '$lib/api';
 
 	export let User: string | undefined;
 
@@ -44,7 +43,13 @@
 	}
 </script>
 
-<Form.Root onSubmit={handleSubmit} onReset={handleReset} let:disabled>
+<Form.Root
+	description="create preauth key"
+	action={handleSubmit}
+	on:reset={handleReset}
+	on:cancel
+	let:disabled
+>
 	<Form.Item>
 		<Label aria-required for="expiration">Expiration</Label>
 		<Input

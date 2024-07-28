@@ -25,7 +25,7 @@
 	const registerMethodRegex = /^REGISTER_METHOD_/;
 </script>
 
-<Title.Root children={3} Title="Device metadata" Description="The metadata of a headscale device">
+<Title.Root Title="Device metadata" Description="The metadata of a headscale device">
 	<Title.Action Title="Edit device" Description="This action cannot be undone" let:close>
 		<SquarePen slot="trigger" />
 		{#if Machine}
@@ -40,13 +40,15 @@
 	>
 		<TimerOff class="text-red-600" slot="trigger" />
 		<Form.Root
-			onSubmit={async () => {
+			description="expire device session"
+			on:cancel={close}
+			action={async () => {
 				await $Machine?.expire();
 				close();
 			}}
-			Destructive
-			DisableReset
-			DisableRequiredNote
+			disableRequired
+			disableReset
+			destructive
 		/>
 	</Title.Action>
 
@@ -54,6 +56,9 @@
 		<Trash2 class="text-red-600" slot="trigger" />
 		<ConfirmDelete
 			phrase={$Machine?.givenName || $Machine?.name || 'device'}
+			description="delete device"
+			data={$Machine}
+			on:cancel={close}
 			onSubmit={async () => {
 				await $Machine?.delete();
 				close();

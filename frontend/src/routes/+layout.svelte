@@ -1,14 +1,13 @@
 <script lang="ts">
-	import { ModeWatcher } from 'mode-watcher';
-	
+  import { ModeWatcher } from 'mode-watcher';
+  
+  import { Toaster } from "$lib/components/ui/sonner";
+
 	import '../app.css';
-	import Header from '$lib/components/site/Header.svelte';
 </script>
 
 <ModeWatcher />
 
-<Header />
+<Toaster />
 
-<main class="container">
-	<slot />
-</main>
+<slot />

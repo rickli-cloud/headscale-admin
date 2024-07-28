@@ -9,8 +9,10 @@
 </script>
 
 <EditName
+	description="create user"
 	onSubmit={async (name) => {
 		await User.create(name);
 		dispatch('submit');
 	}}
+	on:cancel
 />

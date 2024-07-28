@@ -2,9 +2,9 @@
 	import { Badge } from '$lib/components/ui/badge';
 
 	export let tags: Partial<{
-		valid: string[] | undefined;
-		forced: string[] | undefined;
-		invalid: string[] | undefined;
+		valid: string[];
+		forced: string[];
+		invalid: string[];
 	}>;
 
 	const tagRegex = /^tag:/;
