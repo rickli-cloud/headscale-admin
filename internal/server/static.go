@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"io/fs"
 	"net/http"
 	"os"
@@ -12,8 +13,8 @@ import (
 
 type SpaHandler struct {}
 
-func authDisabled() string {
-	if config.Cfg.Mode == "grpc" {
+func stringifyBool(b bool) string {
+	if b {
 		return "true"
 	}
 	return "false"
@@ -29,10 +30,17 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if the request is for the environment send them our custom
-	if path == "/admin/_app/env.js" {
+	if path == config.Cfg.Base_Path + "/_app/env.js" {
+		env := &config.ClientEnvironment{PUBLIC_DISABLE_TOKEN_AUTH: stringifyBool(config.Cfg.Mode == "grpc")}
+		envString, err := json.Marshal(env)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusBadRequest)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/javascript")
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("export const env={\"PUBLIC_DISABLE_TOKEN_AUTH\":" + authDisabled() +"}"))
+		w.Write([]byte("export const env=" + string(envString)))
 		return
 	}
 

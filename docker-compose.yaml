@@ -7,24 +7,24 @@ volumes:
 
 services:
   headscale:
-    image: headscale/headscale:0.22.3
+    image: headscale/headscale:${HEADSCALE_VERSION:-0.23.0-beta1}
     container_name: headscale
     restart: always
-    command: headscale serve
+    command: serve
     volumes:
       - $PWD/.devcontainer/headscale.yaml:/etc/headscale/config.yaml:ro
       - headscale-data:/var/lib/headscale:rw
       - headscale-socket:/var/run/headscale:rw
 
   headscale-admin:
-    image: ghcr.io/rickli-cloud/headscale-admin:latest
+    image: ghcr.io/rickli-cloud/headscale-admin:${HEADSCALE_ADMIN_VERSION:-latest}
     container_name: headscale-admin
     restart: always
     # pull_policy: never # only use local images
     environment:
-      HSADM_CONFIG_PATH: /headscale-config.yaml
+      HSADM_CONFIG_PATH: /headscale.yaml
     volumes:
-      - $PWD/.devcontainer/headscale.yaml:/headscale-config.yaml:ro
+      - $PWD/.devcontainer/headscale.yaml:/headscale.yaml:ro
       - headscale-socket:/var/run/headscale:ro
     ports:
       - 8000:8000

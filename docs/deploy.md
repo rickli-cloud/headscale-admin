@@ -22,8 +22,10 @@ services:
   headscale-admin:
     image: ghcr.io/rickli-cloud/headscale-admin:${HSADM_VERSION:-latest}
     container_name: headscale-admin
-    pull_policy: always
     restart: always
+    environment:
+      HSADM_BASE_PATH: /admin
+      HSADM_MODE: rest # optional
     expose:
       - 8000
 ```

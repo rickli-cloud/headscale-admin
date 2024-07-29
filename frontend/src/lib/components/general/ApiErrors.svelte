@@ -9,10 +9,6 @@
   export let errors: (ApiError | undefined)[];
 
   const filteredErrors = errors?.filter(i => typeof i !== "undefined" && i !== null)
-
-  function parseStack(stack: string | undefined, index = 2): string {
-    return stack?.split(/\n/gm)?.[index]?.trim()?.replaceAll(/^(async\*)?headscaleService|@.*/gm, "") || "Anonymous"
-  }
 </script>
 
 
@@ -25,8 +21,6 @@
     <Alert.Title>API error</Alert.Title>
     
     <Alert.Description>
-      {parseStack(error?.stack)}:
-
       {error?.message || "Internal error"}
 
       {#if error?.code}

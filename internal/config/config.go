@@ -9,8 +9,9 @@ import (
 )
 
 type AppConfiguration struct {
-	Config_path 	string
+	Config_Path 	string
 	Listen_Addr 	string	`default:"0.0.0.0:8000" yaml:"admin_listen_addr"`
+	Base_Path		string
 	Mode			string 	`default:"auto"`
 	DebugConfig		bool	`default:"true"`
 	Socket struct {
@@ -21,11 +22,15 @@ type AppConfiguration struct {
 
 var Cfg AppConfiguration
 
+type ClientEnvironment struct {
+	PUBLIC_DISABLE_TOKEN_AUTH	string
+}
+
 func Load() AppConfiguration {
 	Cfg.loadEnv()
 
-	if len(Cfg.Config_path) > 0 {
-		Cfg.loadYaml(Cfg.Config_path)
+	if len(Cfg.Config_Path) > 0 {
+		Cfg.loadYaml(Cfg.Config_Path)
 	}
 	
 	if Cfg.Mode != "rest" && Cfg.Mode != "grpc" && Cfg.Mode != "auto" {

@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -18,7 +17,9 @@ func Create(ctx context.Context, grpcServerEndpoint *string) (*mux.Router, error
   router := mux.NewRouter()
   
   router.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-    json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+    // json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte("ok"))
 	})
   
   grpcMux := runtime.NewServeMux()
@@ -34,7 +35,7 @@ func Create(ctx context.Context, grpcServerEndpoint *string) (*mux.Router, error
   }
   
   var spa SpaHandler
-  router.PathPrefix("/").Handler(spa)
+  router.PathPrefix(config.Cfg.Base_Path).Handler(spa)
 
   return router, nil
 }
