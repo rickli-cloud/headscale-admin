@@ -20,9 +20,9 @@ services:
     image: ghcr.io/rickli-cloud/headscale-admin:${HEADSCALE_ADMIN_VERSION:-latest}
     container_name: headscale-admin
     restart: always
-    # pull_policy: never # only use local images
     environment:
       HSADM_CONFIG_PATH: /headscale.yaml
+      HSADM_UNSAFE_DISABLE_AUTHENTICATION: true
     volumes:
       - $PWD/.devcontainer/headscale.yaml:/headscale.yaml:ro
       - headscale-socket:/var/run/headscale:ro

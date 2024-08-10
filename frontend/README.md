@@ -2,9 +2,9 @@
 
 A sveltekit single page app built with [Shadcn-svelte](https://shadcn-svelte.com/).
 
-### Configuration
+## Configuration
 
-#### Environment variables
+### Environment variables
 
 ```sh
 cp example.env .env
@@ -16,13 +16,13 @@ cp example.env .env
 | `BASE_PATH`           | Base path the UI gets served on. Used to run the UI on the same domain as Headscale | `/`          | `/admin`     |
 | `PUBLIC_AUTH_ENABLED` |                                                                                     | `false`      | `true`       |
 
-### Dependencies
+## Dependencies
 
 ```sh
 npm install
 ```
 
-### Develop
+## Develop
 
 Run the dev server
 
@@ -30,7 +30,7 @@ Run the dev server
 npm run dev
 ```
 
-### Test
+## Test
 
 This just runs basic typescript checks
 
@@ -38,7 +38,7 @@ This just runs basic typescript checks
 npm run check
 ```
 
-### Build
+## Build
 
 > You can download a archive containing the frontend build for each released version in the corresponding assets
 

@@ -2,40 +2,46 @@ package server
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	gw "github.com/rickli-cloud/headscale-admin/gen/headscale/v1-0.23.0-beta1"
+	gw "github.com/rickli-cloud/headscale-admin/gen/headscale/v0.23.0-beta1"
 	"github.com/rickli-cloud/headscale-admin/internal/config"
+	"github.com/rickli-cloud/headscale-admin/internal/oauth"
 )
 
 func Create(ctx context.Context, grpcServerEndpoint *string) (*mux.Router, error) {
-  router := mux.NewRouter()
-  
-  router.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-    // json.NewEncoder(w).Encode(map[string]bool{"ok": true})
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte("ok"))
-	})
-  
-  grpcMux := runtime.NewServeMux()
+	router := mux.NewRouter()
 
-  if config.Cfg.Mode == "grpc" {
-    opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	router.HandleFunc("/healthz", healthz)
 
-    if err := gw.RegisterHeadscaleServiceHandlerFromEndpoint(ctx, grpcMux,  *grpcServerEndpoint, opts); err != nil {
-      return nil, err
-    }
+	if config.Cfg.Mode == "grpc" {
+		router.HandleFunc("/oauth/callback", oauth.HandleCallback)
+	}
 
-    router.PathPrefix("/api").Handler(grpcMux)
-  }
-  
-  var spa SpaHandler
-  router.PathPrefix(config.Cfg.Base_Path).Handler(spa)
+	appRouter := router.PathPrefix(config.Cfg.Base_Path).Subrouter()
 
-  return router, nil
+	if config.Cfg.Mode == "grpc" {
+		if !config.Cfg.Unsafe_disable_authentication {
+			appRouter.Use(oauth.AuthMiddleware)
+		}
+
+		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+		grpcMux := runtime.NewServeMux()
+
+		if err := gw.RegisterHeadscaleServiceHandlerFromEndpoint(ctx, grpcMux, *grpcServerEndpoint, opts); err != nil {
+			return nil, err
+		}
+
+		appRouter.PathPrefix("/api").Handler(grpcMux)
+	}
+
+	var spa SpaHandler
+	appRouter.PathPrefix("/").Handler(spa)
+
+	return router, nil
 }

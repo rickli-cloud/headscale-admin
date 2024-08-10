@@ -8,9 +8,8 @@ The recommended way to deploy headscale-admin is docker. It is possible without 
 
 Due to CORS restrictions you will probably have to use a proxy to make it share the same domain as headscale. The app can be served on `^/admin` to allow for this.
 
-`docker-compose.yaml`:
-
 ```yaml
+# docker-compose.yaml 
 version: "3.9"
 
 networks:
@@ -32,11 +31,11 @@ services:
 
 ### GRPC API
 
-Make sure to share the headscale UNIX socket over a docker volume. Only thing missing is some sort of authentication.
-
-`docker-compose.yaml`:
+Make sure to share the headscale UNIX socket over a docker volume.
+Easiest way to configure things is with the headscale yaml config.
 
 ```yaml
+# docker-compose.yaml 
 version: "3.9"
 
 volumes:
@@ -75,4 +74,4 @@ services:
 | Headscale    | Headscale-admin |
 | ------------ | --------------- |
 | 0.22.3       | 1.0.x           |
-| 0.23.0-beta1 | 1.1.0-pre1      |
+| 0.23.0-beta1 | 1.1.0-pre       |

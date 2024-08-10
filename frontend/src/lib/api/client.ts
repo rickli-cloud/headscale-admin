@@ -17,7 +17,8 @@ export enum ContentType {
 
 type BaseRequestParams = Omit<RequestInit, 'body'>;
 
-export interface RequestParams extends BaseRequestParams {}
+export type RequestParams = BaseRequestParams
+// export interface RequestParams extends BaseRequestParams {}
 
 export interface FullRequestParams extends BaseRequestParams {
 	/** Request path */
@@ -32,7 +33,7 @@ export interface FullRequestParams extends BaseRequestParams {
 	type?: ContentType;
 }
 
-export interface HttpResponse<D extends unknown, E extends unknown = unknown> extends Response {
+export interface HttpResponse<D, E = unknown> extends Response {
 	data?: D;
 	error?: E;
 }
@@ -54,7 +55,7 @@ export class ApiClient {
 		};
 	}
 
-	protected async request<T extends unknown = unknown, E extends RpcStatus = RpcStatus>({
+	protected async request<T = unknown, E extends RpcStatus = RpcStatus>({
 		format = ContentType.Text,
 		...opt
 	}: FullRequestParams): Promise<HttpResponse<T, ApiError>> {
@@ -77,15 +78,19 @@ export class ApiClient {
 		if (response.status >= 300) {
 			return {
 				...response,
-				error: new ApiError(parsed as E),
+				error: new ApiError(parsed as E, { ...opt, format }),
 				data: undefined
 			};
 		}
 
 		if (response.headers.get('content-type')?.split(';')[0] !== format) {
-			throw new Error("Response did not match expected format '" + format + "'", {
-				cause: response
-			});
+			return {
+				...response,
+				error: new Error("Response did not match expected format '" + format + "'", {
+					cause: { ...opt, format }
+				}),
+				data: undefined,
+			}
 		}
 
 		return {
@@ -141,7 +146,8 @@ export class ApiClient {
 				return response.text();
 
 			default:
-				throw new Error('Unsupported content-type!', { cause: response });
+				console.error(new Error('Received response with unsupported content-type', { cause: response }));
+				return {};
 		}
 	}
 }

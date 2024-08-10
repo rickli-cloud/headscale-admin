@@ -62,23 +62,22 @@ Full implementation of the headscale API. This includes:
 
 ## Documentation
 
-> [!WARNING]  
-> There is no authentication built in.
-> Read the docs carefully and test your setup!
-> A faulty configuration could allow everyone with network access to control your headscale instance!
-
 - [**Configuration**](https://github.com/rickli-cloud/headscale-admin/blob/main/docs/configuration.md)
 - [**Deploy**](https://github.com/rickli-cloud/headscale-admin/blob/main/docs/deploy.md)
 
 ## Test it out
 
-This launches a very basic configuration with the UI listening on [http://localhost:8000](http://localhost:8000).
+> [!WARNING]  
+> This is just a demo configuration with **disabled authentication**!  
+> Do NOT use this for production. Read the docs carefully and test your setup!
 
 ```sh
 git clone https://github.com/rickli-cloud/headscale-admin
 cd headscale-admin
 docker compose up -d
 ```
+
+The UI should be listening on [http://localhost:8000](http://localhost:8000).
 
 ## Todo's
 
