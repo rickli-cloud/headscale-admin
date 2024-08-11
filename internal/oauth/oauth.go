@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/rickli-cloud/headscale-admin/internal/config"
 
@@ -132,7 +133,7 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	state := base64.URLEncoding.EncodeToString(b)
+	state := strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     state_cookie,
