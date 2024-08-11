@@ -52,10 +52,12 @@ func Load() AppConfiguration {
 		log.Fatalf("Invalid environment variable HSADM_MODE expected auto|rest|grpc got: %s", Cfg.Mode)
 	}
 
-	if Cfg.Mode == "auto" && len(Cfg.Socket_Addr) > 0 {
-		Cfg.Mode = "grpc"
-	} else {
-		Cfg.Mode = "rest"
+	if Cfg.Mode == "auto" {
+		if len(Cfg.Socket_Addr) > 0 {
+			Cfg.Mode = "grpc"
+		} else {
+			Cfg.Mode = "rest"
+		}
 	}
 
 	if Cfg.Mode == "grpc" && !Cfg.Unsafe_disable_authentication {
