@@ -16,4 +16,6 @@ COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=build /work/main /hsadm
 
+EXPOSE 8000
+
 ENTRYPOINT [ "/hsadm" ]

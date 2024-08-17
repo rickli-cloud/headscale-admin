@@ -11,7 +11,6 @@ import (
 type AppConfiguration struct {
 	Config_Path                   string
 	Listen_Addr                   string `default:"0.0.0.0:8000" yaml:"admin_listen_addr"`
-	Base_Path                     string `yaml:"admin_base_path"`
 	Server_Url                    string `yaml:"admin_server_url"`
 	Mode                          string `yaml:"admin_mode" default:"auto"`
 	DebugConfig                   bool   `default:"false"`

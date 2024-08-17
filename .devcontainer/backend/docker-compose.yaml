@@ -1,0 +1,42 @@
+version: "3.9"
+name: headscale-backend-devcontainer
+
+volumes:
+  headscale-data:
+    name: headscale-data
+  headscale-socket:
+    name: headscale-socket
+  headscale-config:
+    name: headscale-config
+    external: true
+
+services:
+  headscale: 
+    image: headscale/headscale:${HEADSCALE_VERSION:-0.23.0-beta1}
+    container_name: headscale
+    restart: always
+    command: serve
+    volumes:
+      - headscale-config:/etc/headscale:ro
+      - headscale-data:/var/lib/headscale:rw
+      - headscale-socket:/var/run/headscale:rw
+    networks: []
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: Dockerfile.devcontainer
+    container_name: headscale-backend
+    environment:
+      HSADM_CONFIG_PATH: /work/headscale/config.yaml
+      # HSADM_MODE:
+    volumes:
+      - ../../:/work:cached
+      - headscale-config:/work/headscale:ro
+      - headscale-socket:/var/run/headscale:ro
+    networks: []
+    ports:
+      - 127.0.0.1:8000:8000/tcp
+    depends_on:
+      headscale:
+        condition: service_started

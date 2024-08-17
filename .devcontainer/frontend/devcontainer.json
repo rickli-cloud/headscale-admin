@@ -1,0 +1,12 @@
+{
+    "name": "Frontend",
+    "dockerComposeFile": ["docker-compose.yaml"],
+    "service": "frontend",
+    "workspaceFolder": "/work",
+    "runServices": ["headscale"],
+    "customizations": {
+        "vscode": {
+            "extensions": []
+        }
+    }
+}

@@ -11,7 +11,7 @@ import (
 	"github.com/rickli-cloud/headscale-admin/internal/config"
 )
 
-type SpaHandler struct {}
+type SpaHandler struct{}
 
 func stringifyBool(b bool) string {
 	if b {
@@ -30,7 +30,7 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if the request is for the environment send them our custom
-	if path == config.Cfg.Base_Path + "/_app/env.js" {
+	if path == "/admin/_app/env.js" {
 		env := &config.ClientEnvironment{PUBLIC_DISABLE_TOKEN_AUTH: stringifyBool(config.Cfg.Mode == "grpc")}
 		envString, err := json.Marshal(env)
 		if err != nil {
@@ -47,7 +47,7 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// prepend the path with the path to the static directory
 	path = filepath.Join(frontend.StaticPath, path)
 	_, err = frontend.Folder.Open(path)
-	
+
 	if os.IsNotExist(err) || path == "build" {
 		index, err := frontend.Folder.ReadFile(filepath.Join(frontend.StaticPath, frontend.IndexPath))
 		if err != nil {

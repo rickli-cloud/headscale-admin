@@ -1,0 +1,13 @@
+FROM alpine:latest
+
+LABEL maintainer=github/rickli-cloud
+
+RUN apk add go nodejs npm
+
+WORKDIR /work
+
+COPY . .
+
+EXPOSE 8000
+
+CMD [ "/bin/sh", "-c", "cd frontend; npm ci; npm run build; sleep infinity" ]

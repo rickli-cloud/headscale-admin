@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 5173
 
-CMD [ "/bin/sh", "-c", "npm install; npx vite dev --host" ]
+CMD [ "/bin/sh", "-c", "npm install; sleep infinity" ]

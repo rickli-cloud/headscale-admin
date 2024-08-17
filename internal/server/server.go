@@ -22,7 +22,7 @@ func Create(ctx context.Context, grpcServerEndpoint *string) (*mux.Router, error
 		router.HandleFunc("/oauth/callback", oauth.HandleCallback)
 	}
 
-	appRouter := router.PathPrefix(config.Cfg.Base_Path).Subrouter()
+	appRouter := router.PathPrefix("/admin").Subrouter()
 
 	if config.Cfg.Mode == "grpc" {
 		if !config.Cfg.Unsafe_disable_authentication {

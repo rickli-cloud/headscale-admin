@@ -1,3 +1,7 @@
 *.tmp
+*-tmp.*
 *-tmp/
+tmp.*
 tmp/
+
+/headscale/config.yaml

@@ -12,7 +12,6 @@ Headscale-admin can either be configured with environment variables or using the
 | -------------------- | -------------------------- | --------------------------------- | ------------------------------------------------------------------- |
 |                      | `HSADM_CONFIG_PATH`        |                                   | The location of the headscale yaml configuration                    |
 | `admin_listen_addr`  | `HSADM_LISTEN_ADDR`        | 0.0.0.0:8000                      | Server listen address                                               |
-| `admin_base_path`    | `HSADM_BASE_PATH`          | /                                 | App base path                                                       |
 | `admin_mode`         | `HSADM_MODE`               | auto                              | Either grpc, rest or auto. Tries to use grpc if socket is specified |
 | `admin_server_url`   | `HSADM_SERVER_URL`         |                                   | Used for OAuth redirect_uri. **Required when using grpc mode**      |
 | `unix_socket`        | `HSADM_SOCKET_ADDR`        | /var/run/headscale/headscale.sock | The headscale unix socket                                           |
