@@ -26,11 +26,18 @@ func Init(ctx context.Context) error {
 		return fmt.Errorf("oidc.Issuer is undefined")
 	}
 
+	oidcConfig := oidc.Config{
+		ClientID:        config.Cfg.Oidc.Client_id,
+		SkipIssuerCheck: config.Cfg.Unsafe_disable_oidc_issuer_check,
+	}
+
 	var err error
-	provider, err = oidc.NewProvider(ctx, config.Cfg.Oidc.Issuer)
+	provider, err = oidc.NewProvider(getOidcProvierContext(ctx, config.Cfg.Oidc.Issuer), config.Cfg.Oidc.Issuer)
 	if err != nil {
 		return err
 	}
+
+	verifier = provider.Verifier(&oidcConfig)
 
 	oauth2Config = oauth2.Config{
 		ClientID:     config.Cfg.Oidc.Client_id,
@@ -39,8 +46,6 @@ func Init(ctx context.Context) error {
 		RedirectURL:  config.Cfg.Server_Url + "/oauth/callback",
 		Scopes:       config.Cfg.Oidc.Scopes,
 	}
-
-	verifier = provider.Verifier(&oidc.Config{ClientID: config.Cfg.Oidc.Client_id})
 
 	return nil
 }
@@ -145,4 +150,11 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	})
 
 	http.Redirect(w, r, oauth2Config.AuthCodeURL(state), http.StatusFound)
+}
+
+func getOidcProvierContext(ctx context.Context, issuer string) context.Context {
+	if config.Cfg.Unsafe_disable_oidc_issuer_check {
+		return oidc.InsecureIssuerURLContext(ctx, issuer)
+	}
+	return ctx
 }

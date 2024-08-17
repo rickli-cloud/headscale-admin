@@ -10,6 +10,10 @@ volumes:
     name: headscale-config
     external: true
 
+networks:
+  mockoidc:
+    name: mockoidc
+
 services:
   headscale: 
     image: headscale/headscale:${HEADSCALE_VERSION:-0.23.0-beta1}
@@ -21,22 +25,49 @@ services:
       - headscale-data:/var/lib/headscale:rw
       - headscale-socket:/var/run/headscale:rw
     networks: []
+    ports:
+      - 8080:8080
+
+  mockoidc:
+    image: headscale/headscale:${HEADSCALE_VERSION:-0.23.0-beta1}
+    container_name: mockoidc
+    restart: always
+    command: mockoidc
+    environment:
+      MOCKOIDC_CLIENT_ID: ${MOCKOIDC_CLIENT_ID:-b9z0785f43qc}
+      MOCKOIDC_CLIENT_SECRET: ${MOCKOIDC_CLIENT_SECRET:-v4t3b7z8560t56b091c2}
+      MOCKOIDC_ADDR: 0.0.0.0
+      MOCKOIDC_PORT: 8888
+    networks:
+      - mockoidc
+    ports:
+      - 8888:8888
 
   backend:
     build:
       context: ../../
       dockerfile: Dockerfile.devcontainer
     container_name: headscale-backend
+    restart: always
     environment:
       HSADM_CONFIG_PATH: /work/headscale/config.yaml
+      HSADM_SERVER_URL: http://localhost:8000
+      HSADM_OIDC_ISSUER: http://mockoidc:8888/oidc
+      HSADM_OIDC_CLIENT_ID: ${MOCKOIDC_CLIENT_ID:-b9z0785f43qc}
+      HSADM_OIDC_CLIENT_SECRET: ${MOCKOIDC_CLIENT_SECRET:-v4t3b7z8560t56b091c2}
+      HSADM_OIDC_SCOPES: oidc,profile
+      HSADM_UNSAFE_DISABLE_OIDC_ISSUER_CHECK: true
       # HSADM_MODE:
     volumes:
       - ../../:/work:cached
       - headscale-config:/work/headscale:ro
       - headscale-socket:/var/run/headscale:ro
-    networks: []
+    networks:
+      - mockoidc
     ports:
       - 127.0.0.1:8000:8000/tcp
     depends_on:
       headscale:
+        condition: service_started
+      mockoidc:
         condition: service_started

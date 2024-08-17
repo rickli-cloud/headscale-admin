@@ -1,8 +1,8 @@
-FROM alpine:latest
+FROM node:22-alpine
 
 LABEL maintainer=github/rickli-cloud
 
-RUN apk add go nodejs npm
+RUN apk add go
 
 WORKDIR /work
 
