@@ -11,7 +11,7 @@ const pkg = JSON.parse(
 	readFileSync(fileURLToPath(new URL('package.json', import.meta.url)), 'utf8')
 );
 
-const { BASE_PATH } = process.env;
+const { BASE_PATH = "/admin" } = process.env;
 
 if (BASE_PATH && !BASE_PATH.startsWith('/')) {
 	throw new Error("env BASE_PATH does not seem to be a path. A path must start with '/'.");
