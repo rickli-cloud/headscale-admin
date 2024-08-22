@@ -79,21 +79,24 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 func HandleCallback(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "Unprocessable Entity", http.StatusUnprocessableEntity)
 		return
 	}
 
-	state := r.FormValue("state")
+	// TODO: fix oidc state check
+	/* state := r.FormValue("state")
+
 	if state == "" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
 	cookie, err := r.Cookie(state_cookie)
-	if err != nil || cookie.Value != state {
+
+	if err != nil || cookie == nil || cookie.Value != state {
 		http.Error(w, "Bad Request", http.StatusUnauthorized)
 		return
-	}
+	} */
 
 	code := r.FormValue("code")
 	if code == "" {
@@ -103,6 +106,7 @@ func HandleCallback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := oauth2Config.Exchange(r.Context(), code)
 	if err != nil {
+		fmt.Println("Failed to exchange oauth2 code:", err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}

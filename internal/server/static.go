@@ -13,19 +13,12 @@ import (
 
 type SpaHandler struct{}
 
-func stringifyBool(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
-}
-
 func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// get the absolute path to prevent directory traversal
 	path, err := filepath.Abs(r.URL.Path)
 	if err != nil {
 		// if we failed to get the absolute path respond with a 400 bad request and stop
-		http.Error(w, "Internal server error", http.StatusBadRequest)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
@@ -70,6 +63,18 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// get the subdirectory of the static dir
 	statics, err := fs.Sub(frontend.Folder, frontend.StaticPath)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	// otherwise, use http.FileServer to serve the static dir
 	http.FileServer(http.FS(statics)).ServeHTTP(w, r)
+}
+
+func stringifyBool(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
 }
