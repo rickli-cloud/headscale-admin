@@ -17,9 +17,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          sparse-checkout: |
-            frontend
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
@@ -28,9 +25,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        working-directory: frontend
         run: npm ci
 
       - name: Run check
-        working-directory: frontend
         run: npm run check

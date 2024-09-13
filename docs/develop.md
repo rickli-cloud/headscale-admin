@@ -1,40 +1,51 @@
 # Develop
 
-## Dev-container
+### CORS restrictions
 
-### Backend
+CORS prevents access to the headscale REST API from a different domain.
+To combat this Vite spins up a proxy together with the dev server.
 
-1. Create headscale config
+## Container
 
-    ```sh
-    docker volume create --driver local --opt type=none --opt o=bind --opt device=$PWD/.devcontainer/backend/headscale headscale-config
-    ```
+### Headscale config
 
-2. Start dev-container
+```sh
+docker volume create --driver local --opt type=none --opt o=bind --opt device=$PWD/.devcontainer/headscale headscale-config
+```
 
-    > The frontend gets (re)-built upon (re)-starting the container. On first start you might have to wait a minute for it to complete.
+### Dev-container
 
-3. Start dev-server
+Once inside you can start a dev server with:
 
-    ```sh
-    go run cmd/main.go
-    ```
+```sh
+npm run dev
+```
 
-### Frontend
+## Local
 
-1. Create headscale config
+> If you do not have a headscale instance running you could use docker to run one.
+>
+> ```sh
+> docker compose -f .devcontainer/frontend/docker-compose.yaml up headscale
+>
+> # Grab a api key
+> docker exec headscale headscale apikey create
+> ```
 
-    ```sh
-    docker volume create --driver local --opt type=none --opt o=bind --opt device=$PWD/.devcontainer/frontend/headscale headscale-config
-    ```
+Specify the headscale API host
 
-2. Start dev-container
+```sh
+echo "HEADSCALE_HOST=<HOST>" >> .env
+```
 
-3. Start dev-server
+Install dependencies
 
-    ```sh
-    npm run devcontainer 
+```sh
+npm install
+```
 
-    # Same as:
-    npx vite dev --host
-    ```
+Start the dev server
+
+```sh
+npm run dev
+```

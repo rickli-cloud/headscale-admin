@@ -2,12 +2,15 @@ FROM node:22-alpine
 
 LABEL maintainer=github/rickli-cloud
 
-RUN apk add go
+ENV NODE_ENV development
+
+RUN apk add git
 
 WORKDIR /work
 
+COPY package*.json .
 COPY . .
 
-EXPOSE 8000
+EXPOSE 5173
 
-CMD [ "/bin/sh", "-c", "cd frontend; npm ci; npm run build; sleep infinity" ]
+CMD [ "/bin/sh", "-c", "npm install; sleep infinity" ]
