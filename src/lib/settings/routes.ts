@@ -1,16 +1,18 @@
-import Network from 'lucide-svelte/icons/network';
-import Users from 'lucide-svelte/icons/users';
-import Server from 'lucide-svelte/icons/server';
+import type { ComponentProps, SvelteComponent } from 'svelte';
+import type { Constructor } from 'svelte-headless-table';
+
 import SlidersHorizontal from 'lucide-svelte/icons/sliders-horizontal';
+import Network from 'lucide-svelte/icons/network';
+import Server from 'lucide-svelte/icons/server';
+import Users from 'lucide-svelte/icons/users';
 
 import { base } from '$app/paths';
 
-import type { SvelteComponent } from 'svelte';
-
-interface Route {
+interface Route<T extends SvelteComponent = SvelteComponent> {
 	name: string;
 	path: string;
-	icon: Partial<SvelteComponent>;
+	icon: Constructor<T>;
+	iconProps?: ComponentProps<T>;
 	regex?: RegExp;
 }
 

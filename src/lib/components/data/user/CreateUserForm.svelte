@@ -34,7 +34,8 @@
 			if (ev.form.valid) {
 				try {
 					err.set(undefined);
-					await User.create(ev.form.data.name, undefined, { throw: true });
+					const { error } = await User.create(ev.form.data.name);
+					if (error) throw error;
 					dispatch('submit');
 				} catch (e) {
 					console.error('Error while creating user:', e);

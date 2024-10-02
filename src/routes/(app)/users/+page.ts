@@ -9,7 +9,7 @@ export async function load({ fetch }) {
 
 	const users = await User.list(headscale);
 
-	const apiKeys = await ApiKey.list();
+	const apiKeys = await ApiKey.list(headscale);
 
 	return {
 		users: users.data,

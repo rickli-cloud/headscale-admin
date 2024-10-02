@@ -3,10 +3,11 @@
 	import { zod } from 'sveltekit-superforms/adapters';
 	import { createEventDispatcher } from 'svelte';
 	import { get, writable } from 'svelte/store';
-	import type { ClassValue } from 'clsx';
 	import { z } from 'zod';
 
 	import { Input } from '$lib/components/ui/input';
+
+	import * as Select from '$lib/components/ui/select';
 
 	import SelectUser from '$lib/components/data/user/SelectUser.svelte';
 	import * as Form from '$lib/components/form';
@@ -20,7 +21,8 @@
 	export const createGroupSchema = z.object({
 		name: z.string(),
 		members: z.array(z.string()),
-		description: z.string().optional()
+		description: z.string().optional(),
+		ownedTags: z.array(z.string()).optional()
 	});
 
 	interface $$Props extends Partial<Form.Root> {
@@ -60,8 +62,9 @@
 
 					console.debug({ acl });
 
-					const result = await acl.update(undefined, { throw: true });
+					const result = await acl.update();
 
+					if (result.error) throw result.error;
 					if (result.data) AclStore.set(result.data);
 
 					dispatch('submit');
@@ -89,18 +92,30 @@
 		<Form.FieldErrors />
 	</Form.Field>
 
-	<Form.Field {form} name="members">
-		<Form.Control let:attrs>
-			<Form.Label>Members</Form.Label>
-			<SelectUser {users} {...$constraints.members} multiple bind:selected={$formData.members} />
-		</Form.Control>
-		<Form.FieldErrors />
-	</Form.Field>
-
 	<Form.Field {form} name="description">
 		<Form.Control let:attrs>
 			<Form.Label>Description</Form.Label>
 			<Input {...attrs} {...$constraints.description} bind:value={$formData.description} />
+		</Form.Control>
+		<Form.FieldErrors />
+	</Form.Field>
+
+	<Form.Field {form} name="members">
+		<Form.Control let:attrs>
+			<Form.Label>Members</Form.Label>
+			<SelectUser {...attrs} {users} {...$constraints.members} multiple bind:selected={$formData.members} />
+		</Form.Control>
+		<Form.FieldErrors />
+	</Form.Field>
+
+	<Form.Field {form} name="members">
+		<Form.Control let:attrs>
+			<Form.Label>Owned tags</Form.Label>
+			<Select.Root {...attrs} multiple>
+				<Select.Trigger>
+					<Select.Value asChild></Select.Value>
+				</Select.Trigger>
+			</Select.Root>
 		</Form.Control>
 		<Form.FieldErrors />
 	</Form.Field>

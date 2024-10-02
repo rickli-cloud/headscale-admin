@@ -1,11 +1,11 @@
-import { Headscale, Route } from '$lib/api/index.js';
-import { loadSession } from '$lib/store/session.js';
+import { Headscale, Route } from '$lib/api';
+import { loadSession } from '$lib/store/session';
 
 export async function load({ fetch }) {
 	loadSession();
 	const headscale = new Headscale({ fetch });
 
-	const routes = await Route.list(undefined, headscale);
+	const routes = await Route.list(headscale);
 
 	return {
 		routes: routes.data,

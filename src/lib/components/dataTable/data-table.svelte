@@ -94,6 +94,33 @@
 		<div class="mb-5 grid w-full items-center gap-2.5" style="grid-template-columns: 1fr auto;">
 			<div class="flex items-center gap-1.5">
 				<Input class="w-full max-w-xs" placeholder="Filter..." type="text" bind:value={$filterValue} />
+
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger asChild let:builder>
+						<button class={buttonVariants({ variant: 'outline' })} use:builder.action {...builder}>
+							<MixerHorizontal class="h-5 w-5" />
+						</button>
+					</DropdownMenu.Trigger>
+
+					<DropdownMenu.Content>
+						<DropdownMenu.Label>Columns</DropdownMenu.Label>
+						<DropdownMenu.Separator />
+
+						{#each flatColumns as col}
+							{#if !col.plugins?.sort?.disable}
+								<DropdownMenu.CheckboxItem
+									on:click={() => handleHide(col.id)}
+									checked={!$hiddenColumnIds.includes(col.id)}
+									disabled={rootUnHidableCells.includes(col.id)}
+								>
+									{typeof col.header === 'string' && col.header.length ? col.header : col.id}
+								</DropdownMenu.CheckboxItem>
+							{/if}
+						{/each}
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+
+				<slot name="table-actions" />
 			</div>
 
 			<div class="flex items-center gap-1.5">
@@ -128,31 +155,6 @@
 						{/if}
 					</DataTableAction>
 				{/each}
-
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<button class={buttonVariants({ variant: 'outline' })} use:builder.action {...builder}>
-							<MixerHorizontal class="h-5 w-5" />
-						</button>
-					</DropdownMenu.Trigger>
-
-					<DropdownMenu.Content>
-						<DropdownMenu.Label>Columns</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-
-						{#each flatColumns as col}
-							{#if !col.plugins?.sort?.disable}
-								<DropdownMenu.CheckboxItem
-									on:click={() => handleHide(col.id)}
-									checked={!$hiddenColumnIds.includes(col.id)}
-									disabled={rootUnHidableCells.includes(col.id)}
-								>
-									{typeof col.header === 'string' && col.header.length ? col.header : col.id}
-								</DropdownMenu.CheckboxItem>
-							{/if}
-						{/each}
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
 			</div>
 		</div>
 	</Table.Caption>
@@ -188,7 +190,7 @@
 	{/if}
 
 	<Table.Body {...$tableBodyAttrs}>
-		{#each $pageRows as row, index}
+		{#each $pageRows as row}
 			<Sheet.Root let:open let:close>
 				<Sheet.Trigger asChild let:builder>
 					<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
@@ -215,7 +217,7 @@
 				</Sheet.Trigger>
 
 				<Sheet.Content>
-					<slot {row} {index} {open} {close} />
+					<slot {row} index={Number(row.id)} {open} {close} />
 
 					<!-- <Sheet.Header>
             <Sheet.Title>Are you sure absolutely sure?</Sheet.Title>

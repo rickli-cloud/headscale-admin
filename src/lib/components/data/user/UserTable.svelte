@@ -6,6 +6,8 @@
 
 	import { invalidateAll } from '$app/navigation';
 
+	import * as Sheet from '$lib/components/ui/sheet';
+
 	import * as DataTable from '$lib/components/dataTable';
 	import DateTime from '$lib/components/general/DateTime.svelte';
 	import Code from '$lib/components/general/Code.svelte';
@@ -13,6 +15,7 @@
 	import type { User } from '$lib/api';
 
 	import CreateUserForm from './CreateUserForm.svelte';
+	import ErrorComponent from '$lib/components/general/ErrorComponent.svelte';
 
 	export let users: Writable<User[]>;
 
@@ -47,11 +50,6 @@
 
 	const actions = [
 		DataTable.createAction({
-			title: 'Create user',
-			icon: Plus,
-			component: CreateUserForm
-		}),
-		DataTable.createAction({
 			title: 'Delete users',
 			variant: 'alert-dialog',
 			destructive: true,
@@ -59,6 +57,11 @@
 			disabled: (ids) => !ids.length,
 			data: getSelectedUsers,
 			action: handleDelete
+		}),
+		DataTable.createAction({
+			title: 'Create user',
+			icon: Plus,
+			component: CreateUserForm
 		})
 	];
 
@@ -67,7 +70,11 @@
 	}
 
 	async function handleDelete(ids: string[]) {
-		for (const usr of getSelectedUsers(ids)) await usr.delete(undefined, { throw: true });
+		for (const usr of getSelectedUsers(ids)) {
+			const { error } = await usr.delete();
+			if (error) throw error;
+		}
+
 		await invalidateAll();
 	}
 </script>
@@ -78,7 +85,16 @@
 	{actions}
 	caption="Users"
 	description="Users can own multiple devices"
-	let:row
+	let:index
 >
-	<Code yaml={$users?.[Number(row.id)]} />
+	{#if $users?.[index]}
+		<Sheet.Header>
+			<Sheet.Title>{$users[index].name}</Sheet.Title>
+			<Sheet.Description></Sheet.Description>
+		</Sheet.Header>
+
+		<Code yaml={$users[index]} />
+	{:else}
+		<ErrorComponent err={new Error('User not found')} />
+	{/if}
 </DataTable.Root>

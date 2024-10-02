@@ -1,4 +1,4 @@
-import { Headscale, Machine } from '$lib/api/index.js';
+import { Headscale, Machine } from '$lib/api';
 
 export async function load({ fetch }) {
 	const headscale = new Headscale({ fetch });

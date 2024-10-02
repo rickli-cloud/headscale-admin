@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Select from '$lib/components/ui/select/index.js';
+	import * as Select from '$lib/components/ui/select';
 	import type { Selected } from 'bits-ui';
 	import { writable } from 'svelte/store';
 
@@ -9,6 +9,7 @@
 	export let invalidSelected: string[] | undefined = [];
 	export let name = 'multiSelect';
 	export let required = true;
+	export let multiple: boolean = true;
 
 	const sel = writable<Selected<string>[]>(selected?.map((value) => ({ value })) || []);
 	sel.subscribe((state) => {
@@ -17,7 +18,7 @@
 	});
 </script>
 
-<Select.Root portal={null} multiple bind:selected={$sel} {required}>
+<Select.Root portal={null} {multiple} bind:selected={$sel} {required}>
 	<Select.Trigger>
 		<Select.Value asChild>
 			<span>

@@ -87,11 +87,9 @@ export interface TableAction<Component extends SvelteComponent, Icon extends Sve
 }
 
 /** Only used for proper type inference */
-function createAction<Component extends SvelteComponent, Icon extends SvelteComponent>(
+const createAction = <Component extends SvelteComponent, Icon extends SvelteComponent>(
 	data: TableAction<Component, Icon>
-): TableAction<Component, Icon> {
-	return data;
-}
+): TableAction<Component, Icon> => data;
 
 export {
 	DataTable as default,

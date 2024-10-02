@@ -20,98 +20,34 @@
 		$$restProps.class
 	)}
 >
-	<div
-		class="flex h-full max-w-screen-2xl items-center justify-between gap-8"
-		class:px-8={!container}
-		class:container
-	>
+	<div class="flex h-full max-w-screen-2xl items-center justify-between gap-8" class:px-8={!container} class:container>
 		<div class="h-12 w-24 min-w-24">
 			<HeadscaleLogo />
 		</div>
 
-		<nav class=" flex items-center gap-4">
+		<nav class="flex h-full items-center gap-4">
 			{#each routes as route}
 				<a
+					class="flex h-full items-center [&>svg]:text-foreground/60 [&>svg]:transition-colors"
 					href={base + route.path}
-					class:[&_svg]:!text-foreground={(route.regex || new RegExp(`^${base}${route.path}`)).test(
-						$page.url.pathname
-					)}
+					class:active={(route.regex || new RegExp(`^${base}${route.path}`)).test($page.url.pathname)}
 				>
-					<svelte:component this={route.icon} />
+					<svelte:component this={route.icon} {...route.iconProps || {}} />
 				</a>
 			{/each}
-			<!-- <a href="{base}/network">
-				<Cog
-					class="h-6 w-6 {new RegExp('^' + base + '/devices', 'i').test($page.url.pathname)
-						? 'text-foreground'
-						: ''}"
-				/>
-			</a>
-
-			<a href="{base}/settings">
-				<Cog
-					class="h-6 w-6 {new RegExp('^' + base + '/devices', 'i').test($page.url.pathname)
-						? 'text-foreground'
-						: ''}"
-				/>
-			</a> -->
 		</nav>
-
-		<!-- <nav class="flex flex-nowrap items-center gap-6 text-sm">
-			<a
-				href={base + '/'}
-				class="font-extrabold"
-				class:!text-foreground={/^(#\/)?$/i.test(document.location.hash)}
-			>
-				<HeadscaleLogo />
-			</a>
-
-			{#if !disableNav}
-				<slot name="nav">
-					<a
-						href={base + '/users'}
-						class:!text-foreground={new RegExp('^' + base + '/users', 'i').test($page.url.pathname)}
-					>
-						Users
-					</a>
-					<a
-						href={base + '/devices'}
-						class:!text-foreground={new RegExp('^' + base + '/devices', 'i').test(
-							$page.url.pathname
-						)}
-					>
-						Devices
-					</a>
-					<a
-						href={base + '/acl'}
-						class="whitespace-nowrap"
-						class:!text-foreground={new RegExp('^' + base + '/acl', 'i').test($page.url.pathname)}
-					>
-						Access control
-					</a>
-				</slot>
-			{/if}
-		</nav> -->
-
-		<!-- <div class="flex items-center gap-4">
-			<slot />
-
-			<a href="{base}/settings">
-				<Cog
-					class="h-6 w-6 {new RegExp('^' + base + '/devices', 'i').test($page.url.pathname)
-						? 'text-foreground'
-						: ''}"
-				/>
-			</a>
-		</div> -->
 	</div>
 </header>
 
-<style scoped lang="postcss">
-	header.header {
-		& a,
-		& svg {
-			@apply text-foreground/60 transition-colors hover:text-foreground/90;
+<style lang="postcss">
+	header {
+		& nav > a.active {
+			@apply -mb-0.5 border-b-2 border-current;
+		}
+
+		& nav > a.active,
+		& nav > a:hover {
+			@apply [&>svg]:text-foreground/90;
 		}
 	}
 </style>

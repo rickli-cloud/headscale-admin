@@ -5,18 +5,18 @@
 	import { Plus, Trash } from 'svelte-radix';
 
 	import * as DataTable from '$lib/components/dataTable';
-	import Code from '$lib/components/general/Code.svelte';
 
 	import { groupRegex, type User } from '$lib/api';
 	import { AclStore } from '$lib/store/acl';
 
 	import CreateGroupForm from './CreateGroupForm.svelte';
 	import GroupTableMembers from './group-table-members.svelte';
+	import Code from '$lib/components/general/Code.svelte';
 
 	export let users: Writable<User[]>;
 
 	const groups = writable(formatGroups());
-	AclStore.subscribe((state) => groups.set(formatGroups(state.groups)));
+	AclStore.subscribe((state) => groups.set(formatGroups(state)));
 
 	const table = createTable(groups, DataTable.createTablePlugins());
 
@@ -32,6 +32,10 @@
 				accessor: 'members',
 				header: 'Members',
 				cell: ({ value }) => createRender(GroupTableMembers, { usernames: value, users: get(users) })
+			}),
+			table.column({
+				accessor: 'ownedTags',
+				header: 'Owned tags'
 			})
 		]),
 		{
@@ -41,11 +45,6 @@
 
 	const actions = [
 		DataTable.createAction({
-			title: 'Create group',
-			icon: Plus,
-			component: CreateGroupForm
-		}),
-		DataTable.createAction({
 			title: 'Delete group',
 			variant: 'alert-dialog',
 			destructive: true,
@@ -53,13 +52,29 @@
 			disabled: (ids) => !ids.length,
 			data: getSelectedGroups,
 			action: handleDelete
+		}),
+		DataTable.createAction({
+			title: 'Create group',
+			icon: Plus,
+			component: CreateGroupForm
 		})
 	];
 
-	function formatGroups(groups = get(AclStore).groups) {
+	function formatGroups(acl = get(AclStore)) {
+		const { groups, tagOwners } = acl;
+
 		if (typeof groups !== 'object') return [];
+
 		delete groups['$$comments'];
-		return Object.entries(groups).map(([name, members]) => ({ name, members }));
+		delete tagOwners['$$comments'];
+
+		return Object.entries(groups).map(([name, members]) => ({
+			name,
+			members,
+			ownedTags: Object.entries(tagOwners)
+				.filter(([_, owners]) => owners.includes(name))
+				.map((i) => i[0])
+		}));
 	}
 
 	function getSelectedGroups(names: string[]) {
@@ -70,7 +85,8 @@
 		const acl = get(AclStore);
 		try {
 			for (const name of names) delete acl.groups[name];
-			const { data } = await acl.update(undefined, { throw: true });
+			const { data, error } = await acl.update();
+			if (error) throw error;
 			if (data) AclStore.set(data);
 		} catch (err) {
 			AclStore.set(acl.reset());
@@ -78,9 +94,6 @@
 	}
 </script>
 
-<DataTable.Root
-	{model}
-	{actions}
-	caption="Groups"
-	description="Group users together and control tag ownership"
-></DataTable.Root>
+<DataTable.Root {model} {actions} caption="Groups" description="Group users together and control tag ownership" let:index>
+	<Code yaml={$groups[index]} />
+</DataTable.Root>

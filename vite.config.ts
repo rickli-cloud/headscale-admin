@@ -5,10 +5,10 @@ import { config } from 'dotenv';
 import pkg from './package.json';
 
 config();
-const { HEADSCALE_HOST = 'http://localhost:8080' } = process.env;
+const { HEADSCALE_HOST = 'http://localhost:8080', PUBLIC_MOCK_ENABLED } = process.env;
 
 export default defineConfig(({ mode }) => {
-	if (mode === 'development') {
+	if (mode === 'development' && PUBLIC_MOCK_ENABLED !== 'true') {
 		if (!HEADSCALE_HOST) throw new Error('Environment variable HEADSCALE_HOST is required!');
 		console.debug(`[Proxy] ^/api => ${HEADSCALE_HOST}`);
 	}
@@ -21,11 +21,15 @@ export default defineConfig(({ mode }) => {
 		},
 		server: {
 			proxy: {
-				'^/api': {
-					target: HEADSCALE_HOST,
-					changeOrigin: true,
-					secure: false
-				}
+				...(PUBLIC_MOCK_ENABLED
+					? {}
+					: {
+							'^/api': {
+								target: HEADSCALE_HOST,
+								changeOrigin: true,
+								secure: false
+							}
+						})
 			}
 		}
 	};

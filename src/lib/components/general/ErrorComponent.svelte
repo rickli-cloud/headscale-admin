@@ -8,7 +8,7 @@
 
 	import { FormError } from '$lib/components/form';
 
-	import { ApiError } from '$lib/api/client';
+	import { ApiError } from '$lib/api';
 	import { formatStack } from '$lib/utils/error';
 
 	import Code from './Code.svelte';
@@ -24,8 +24,8 @@
 	<span class="text-destructive">
 		{#if err instanceof ApiError}
 			<span class="font-semibold">{err.name}:</span>
-			{err.cause.method}
-			{err.cause.path}: {err.message}
+			<!-- {err.cause.method}
+			{err.cause.path}: {err.message} -->
 		{:else if err instanceof Error}
 			<span class="font-semibold">{err.name}:</span>
 			{err.message}
@@ -47,8 +47,8 @@
 		<Alert.Title>
 			{#if err instanceof ApiError}
 				<span class="font-semibold">{err.name}:</span>
-				{err.cause.method}
-				{err.cause.path}: {err.message}
+				<!-- {err.cause.method}
+				{err.cause.path}: {err.message} -->
 			{:else if err instanceof Error}
 				<span class="font-semibold">{err.name}:</span>
 				{err.message}

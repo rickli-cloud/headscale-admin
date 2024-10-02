@@ -24,15 +24,15 @@
 </script>
 
 {#if variant === 'link'}
-	<Button
-		{href}
-		{disabled}
-		tabindex={0}
-		variant={destructive ? 'destructiveOutline' : 'outline'}
-		class="[&>svg]:h-5 [&>svg]:w-5"
-	>
-		<slot name="trigger" {open} {close} />
-	</Button>
+	{#if href}
+		<Button {href} tabindex={0} variant={destructive ? 'destructiveOutline' : 'outline'} class="[&>svg]:h-5 [&>svg]:w-5">
+			<slot name="trigger" {open} {close} />
+		</Button>
+	{:else}
+		<Button {disabled} tabindex={0} variant={destructive ? 'destructiveOutline' : 'outline'} class="[&>svg]:h-5 [&>svg]:w-5">
+			<slot name="trigger" {open} {close} />
+		</Button>
+	{/if}
 {:else if variant === 'sheet'}
 	<Sheet.Root let:open let:close>
 		<Sheet.Trigger asChild let:builder>

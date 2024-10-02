@@ -134,7 +134,7 @@
 	);
 </script>
 
-<DataTable caption="Machines" model={machineModel} let:index>
+<DataTable caption="Machines" model={machineModel} let:row>
 	<svelte:fragment slot="description">
 		Refer to the official guides for instructions on connecting
 		<a href="/apple" class="underline-offset-4 hover:text-foreground hover:underline" aria-roledescription="external-link">
@@ -147,5 +147,5 @@
 		devices
 	</svelte:fragment>
 
-	<Code yaml={machines?.[index] || testMachine} />
+	<Code yaml={machines?.[Number(row.id)] || testMachine} />
 </DataTable>

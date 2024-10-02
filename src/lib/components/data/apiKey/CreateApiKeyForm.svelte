@@ -12,7 +12,7 @@
 	import Code from '$lib/components/general/Code.svelte';
 	import ErrorComponent from '$lib/components/general/ErrorComponent.svelte';
 
-	import { ApiKey, type V1CreateApiKeyResponse } from '$lib/api';
+	import { ApiKey, type components } from '$lib/api';
 	import Button from '$lib/components/ui/button/button.svelte';
 
 	const dispatch = createEventDispatcher();
@@ -23,6 +23,7 @@
 
 	interface $$Props extends Partial<Form.Root> {}
 
+	type V1CreateApiKeyResponse = components['schemas']['v1CreateApiKeyResponse'];
 	interface CreateApiKeyResult extends V1CreateApiKeyResponse {
 		expiration: string;
 	}
@@ -40,10 +41,9 @@
 				try {
 					const data = get(formData);
 					data.expiration = new Date(data.expiration).toISOString();
-					const response = await ApiKey.create(data, undefined, { throw: true });
-					if (response.data) {
-						result.set({ ...data, ...response.data });
-					}
+					const response = await ApiKey.create(data);
+					if (response.error) throw response.error;
+					if (response.data) result.set({ ...data, ...response.data });
 				} catch (e) {
 					console.error('Error while creating api key:', e);
 					err.set(e);
