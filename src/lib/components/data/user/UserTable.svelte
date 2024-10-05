@@ -10,7 +10,6 @@
 
 	import * as DataTable from '$lib/components/dataTable';
 	import DateTime from '$lib/components/general/DateTime.svelte';
-	import Code from '$lib/components/general/Code.svelte';
 
 	import type { User } from '$lib/api';
 
@@ -89,11 +88,26 @@
 >
 	{#if $users?.[index]}
 		<Sheet.Header>
-			<Sheet.Title>{$users[index].name}</Sheet.Title>
+			<Sheet.Title>User details</Sheet.Title>
 			<Sheet.Description></Sheet.Description>
 		</Sheet.Header>
 
-		<Code yaml={$users[index]} />
+		<table class="table">
+			<tr>
+				<th class="pr-6 text-left">ID</th>
+				<td>{$users[index].id}</td>
+			</tr>
+
+			<tr>
+				<th class="pr-6 text-left">Name</th>
+				<td>{$users[index].name}</td>
+			</tr>
+
+			<tr>
+				<th class="pr-6 text-left">Created</th>
+				<td>{$users[index].createdAt ? new Date($users[index].createdAt).toLocaleString() : ''}</td>
+			</tr>
+		</table>
 	{:else}
 		<ErrorComponent err={new Error('User not found')} />
 	{/if}

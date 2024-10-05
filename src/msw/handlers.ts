@@ -4,14 +4,15 @@
  */
 /* eslint-disable */
 /* tslint:disable */
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, http, type HttpResponseInit, type PathParams } from 'msw';
 import { faker } from '@faker-js/faker';
-import type { components } from '$lib/api';
+import type { components, operations, paths, RpcStatus } from '$lib/api';
 
 faker.seed(1);
 
 const baseURL = '';
 const MAX_ARRAY_LENGTH = 5;
+const MIN_ARRAY_LENGTH = 1;
 
 let i = 0;
 const next = () => {
@@ -21,11 +22,110 @@ const next = () => {
 	return i++;
 };
 
+// ---
+
+const simulateApiError: boolean = false;
+
+type ApiMethod = 'get' | 'post' | 'delete' | 'put';
+
+type ApiPath = keyof paths;
+
+interface ApiOperation {
+	requestBody?: {
+		content?: {
+			'application/json': object;
+		};
+	};
+	responses?: {
+		[x: string | number]: object;
+	};
+}
+
+type ApiOperationRequestBody = NonNullable<ApiOperation['requestBody']>;
+
+type ApiResponse<Path extends ApiPath, Method extends ApiMethod> = paths[Path][Method] extends ApiOperation
+	? paths[Path][Method]['responses'][200]['content']['application/json']
+	: never;
+
+type ApiRequestBody<Path extends ApiPath, Method extends ApiMethod> = paths[Path][Method] extends ApiOperation
+	? paths[Path][Method]['requestBody'] extends ApiOperationRequestBody
+		? paths[Path][Method]['requestBody']['content']['application/json']
+		: never
+	: never;
+
+type HttpRequestData<Path extends ApiPath, Method extends ApiMethod> = Parameters<
+	Parameters<typeof http.get<PathParams, ApiRequestBody<Path, Method>>>[1]
+>[0];
+
+function handler<Path extends ApiPath, Method extends ApiMethod>(opt: {
+	path: Path;
+	method: Method;
+	init?: HttpResponseInit;
+	response:
+		| ApiResponse<Path, Method>
+		| ((data: HttpRequestData<Path, Method>) => ApiResponse<Path, Method>)
+		| ((data: HttpRequestData<Path, Method>) => Promise<ApiResponse<Path, Method>>);
+}) {
+	return http[opt.method]<PathParams, ApiRequestBody<Path, Method>, ApiResponse<Path, Method> | RpcStatus, Path>(
+		opt.path,
+		async (data) => {
+			// TODO: Check auth header
+
+			if (simulateApiError) {
+				// Maybe only throw errors at random?
+				return HttpResponse.json(
+					{ code: 500, message: 'Internal server error', details: [{ '@type': 'Mocking API server failure' }] } as RpcStatus,
+					{ status: 500 }
+				);
+			}
+
+			return HttpResponse.json(typeof opt.response === 'function' ? await opt.response(data) : opt.response, {
+				status: 200,
+				...opt.init
+			});
+		}
+	);
+}
+
+export const test = [
+	handler({
+		path: '/api/v1/apikey',
+		method: 'get',
+		response: {
+			apiKeys: [...new Array(faker.number.int({ min: MIN_ARRAY_LENGTH, max: MAX_ARRAY_LENGTH })).keys()].map((_) => ({
+				id: faker.number.octal(),
+				prefix: faker.lorem.words(),
+				expiration: faker.date.past().toISOString(),
+				createdAt: faker.date.past().toISOString(),
+				lastSeen: faker.date.past().toISOString()
+			}))
+		}
+	}),
+	handler({
+		path: '/api/v1/apikey',
+		method: 'post',
+		response: async ({ request }) => {
+			const body = await request.json();
+			return {};
+		}
+	}),
+	handler({
+		path: '/api/v1/user',
+		method: 'post',
+		response: async ({ request }) => {
+			const body = await request.json();
+			return {};
+		}
+	})
+];
+
+// ---
+
 export const handlers = [
 	http.get(`${baseURL}/api/v1/apikey`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceListApiKeys200Response(), { status: 200 }],
-			[await getHeadscaleServiceListApiKeysdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceListApiKeysdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -33,7 +133,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/apikey`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceCreateApiKey200Response(), { status: 200 }],
-			[await getHeadscaleServiceCreateApiKeydefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceCreateApiKeydefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -41,7 +141,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/apikey/expire`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceExpireApiKey200Response(), { status: 200 }],
-			[await getHeadscaleServiceExpireApiKeydefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceExpireApiKeydefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -49,7 +149,7 @@ export const handlers = [
 	http.delete(`${baseURL}/api/v1/apikey/:prefix`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceDeleteApiKey200Response(), { status: 200 }],
-			[await getHeadscaleServiceDeleteApiKeydefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceDeleteApiKeydefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -57,7 +157,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/debug/node`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceDebugCreateNode200Response(), { status: 200 }],
-			[await getHeadscaleServiceDebugCreateNodedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceDebugCreateNodedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -65,7 +165,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/node`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceListNodes200Response(), { status: 200 }],
-			[await getHeadscaleServiceListNodesdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceListNodesdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -73,7 +173,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/node/backfillips`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceBackfillNodeIPs200Response(), { status: 200 }],
-			[await getHeadscaleServiceBackfillNodeIPsdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceBackfillNodeIPsdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -81,7 +181,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/node/register`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceRegisterNode200Response(), { status: 200 }],
-			[await getHeadscaleServiceRegisterNodedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceRegisterNodedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -89,7 +189,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/node/:nodeId`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceGetNode200Response(), { status: 200 }],
-			[await getHeadscaleServiceGetNodedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceGetNodedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -97,7 +197,7 @@ export const handlers = [
 	http.delete(`${baseURL}/api/v1/node/:nodeId`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceDeleteNode200Response(), { status: 200 }],
-			[await getHeadscaleServiceDeleteNodedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceDeleteNodedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -105,7 +205,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/node/:nodeId/expire`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceExpireNode200Response(), { status: 200 }],
-			[await getHeadscaleServiceExpireNodedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceExpireNodedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -113,7 +213,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/node/:nodeId/rename/:newName`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceRenameNode200Response(), { status: 200 }],
-			[await getHeadscaleServiceRenameNodedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceRenameNodedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -121,7 +221,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/node/:nodeId/routes`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceGetNodeRoutes200Response(), { status: 200 }],
-			[await getHeadscaleServiceGetNodeRoutesdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceGetNodeRoutesdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -129,7 +229,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/node/:nodeId/tags`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceSetTags200Response(), { status: 200 }],
-			[await getHeadscaleServiceSetTagsdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceSetTagsdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -137,7 +237,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/node/:nodeId/user`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceMoveNode200Response(), { status: 200 }],
-			[await getHeadscaleServiceMoveNodedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceMoveNodedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -145,7 +245,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/policy`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceGetPolicy200Response(), { status: 200 }],
-			[await getHeadscaleServiceGetPolicydefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceGetPolicydefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -153,7 +253,7 @@ export const handlers = [
 	http.put(`${baseURL}/api/v1/policy`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceSetPolicy200Response(), { status: 200 }],
-			[await getHeadscaleServiceSetPolicydefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceSetPolicydefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -161,7 +261,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/preauthkey`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceListPreAuthKeys200Response(), { status: 200 }],
-			[await getHeadscaleServiceListPreAuthKeysdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceListPreAuthKeysdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -169,7 +269,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/preauthkey`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceCreatePreAuthKey200Response(), { status: 200 }],
-			[await getHeadscaleServiceCreatePreAuthKeydefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceCreatePreAuthKeydefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -177,7 +277,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/preauthkey/expire`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceExpirePreAuthKey200Response(), { status: 200 }],
-			[await getHeadscaleServiceExpirePreAuthKeydefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceExpirePreAuthKeydefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -185,7 +285,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/routes`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceGetRoutes200Response(), { status: 200 }],
-			[await getHeadscaleServiceGetRoutesdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceGetRoutesdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -193,7 +293,7 @@ export const handlers = [
 	http.delete(`${baseURL}/api/v1/routes/:routeId`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceDeleteRoute200Response(), { status: 200 }],
-			[await getHeadscaleServiceDeleteRoutedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceDeleteRoutedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -201,7 +301,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/routes/:routeId/disable`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceDisableRoute200Response(), { status: 200 }],
-			[await getHeadscaleServiceDisableRoutedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceDisableRoutedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -209,7 +309,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/routes/:routeId/enable`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceEnableRoute200Response(), { status: 200 }],
-			[await getHeadscaleServiceEnableRoutedefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceEnableRoutedefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -217,7 +317,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/user`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceListUsers200Response(), { status: 200 }],
-			[await getHeadscaleServiceListUsersdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceListUsersdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -225,7 +325,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/user`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceCreateUser200Response(), { status: 200 }],
-			[await getHeadscaleServiceCreateUserdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceCreateUserdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -233,7 +333,7 @@ export const handlers = [
 	http.get(`${baseURL}/api/v1/user/:name`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceGetUser200Response(), { status: 200 }],
-			[await getHeadscaleServiceGetUserdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceGetUserdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -241,7 +341,7 @@ export const handlers = [
 	http.delete(`${baseURL}/api/v1/user/:name`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceDeleteUser200Response(), { status: 200 }],
-			[await getHeadscaleServiceDeleteUserdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceDeleteUserdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -249,7 +349,7 @@ export const handlers = [
 	http.post(`${baseURL}/api/v1/user/:oldName/rename/:newName`, async () => {
 		const resultArray = [
 			[await getHeadscaleServiceRenameUser200Response(), { status: 200 }],
-			[await getHeadscaleServiceRenameUserdefaultResponse(), { status: NaN }]
+			[await getHeadscaleServiceRenameUserdefaultResponse(), { status: 500 }]
 		];
 
 		return HttpResponse.json(...resultArray[next() % resultArray.length]);
@@ -841,7 +941,7 @@ export function getHeadscaleServiceMoveNodedefaultResponse() {
 
 export function getHeadscaleServiceGetPolicy200Response() {
 	return {
-		policy: faker.lorem.words(),
+		policy: '{}',
 		updatedAt: faker.date.past()
 	};
 }
@@ -858,7 +958,7 @@ export function getHeadscaleServiceGetPolicydefaultResponse() {
 
 export function getHeadscaleServiceSetPolicy200Response() {
 	return {
-		policy: faker.lorem.words(),
+		policy: '{}',
 		updatedAt: faker.date.past()
 	};
 }

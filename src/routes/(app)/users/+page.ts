@@ -1,4 +1,4 @@
-import { Acl, ApiKey, Headscale, User } from '$lib/api';
+import { Acl, ApiKey, formatApiErrors, Headscale, User } from '$lib/api';
 import { AclStore } from '$lib/store/acl.js';
 
 export async function load({ fetch }) {
@@ -14,6 +14,6 @@ export async function load({ fetch }) {
 	return {
 		users: users.data,
 		apiKeys: apiKeys.data,
-		errors: [users.error, acl.error, apiKeys.error].filter((e) => !!e)
+		errors: formatApiErrors([users.error, acl.error, apiKeys.error])
 	};
 }

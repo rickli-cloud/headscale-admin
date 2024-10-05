@@ -5,32 +5,33 @@ import type { components, paths } from './headscale.d';
 import { stripJsonTrailingCommas } from '$lib/utils/json';
 import { get } from 'svelte/store';
 import { Session } from '$lib/store/session';
+import { ApiError } from '.';
 
 export const commentRegex = /^\/\/(\s+)?/;
 export const groupRegex = /^group:/;
 export const tagRegex = /^tag:/;
 
-export function headscaleClient<Paths extends object = paths, Media extends `${string}/${string}` = `${string}/${string}`>(
-	clientOptions?: ClientOptions
-): Client<Paths, Media> {
-	return createClient<Paths, Media>({
-		...clientOptions
-	});
-}
+export type ApiPath = keyof paths;
+export type ApiMethod = 'get' | 'post' | 'delete' | 'put';
 
 export class Headscale {
 	public readonly client: Client<paths, `${string}/${string}`>;
 
-	constructor(clientOptions?: ClientOptions) {
-		const session = get(Session);
-
-		const headers = new Headers();
-		headers.set('Authorization', 'Bearer ' + session?.token);
-
+	public constructor(clientOptions?: ClientOptions, timeout = 5000) {
 		this.client = createClient({
-			baseUrl: session?.baseUrl,
-			headers,
+			signal: AbortSignal.timeout(timeout),
+			baseUrl: get(Session)?.baseUrl,
 			...(clientOptions || {})
+		});
+
+		this.client.use({
+			async onRequest({ request }) {
+				const session = get(Session);
+				if (session?.token) {
+					request.headers.set('Authorization', 'Bearer ' + session.token);
+				}
+				return request;
+			}
 		});
 	}
 }
@@ -46,29 +47,29 @@ export interface V1Policy {
 	 * groups are collections of users having a common scope. A user can be in multiple groups
 	 * groups cannot be composed of groups
 	 */
-	readonly groups: { [x: string]: readonly string[] };
+	groups: { [x: string]: string[] };
 	/**
 	 * tagOwners in tailscale is an association between a TAG and the people allowed to set this TAG on a server.
 	 * This is documented [here](https://tailscale.com/kb/1068/acl-tags#defining-a-tag)
 	 * and explained [here](https://tailscale.com/blog/rbac-like-it-was-meant-to-be/)
 	 */
-	readonly tagOwners: { [x: string]: readonly string[] };
+	tagOwners: { [x: string]: string[] };
 	/**
 	 * hosts should be defined using its IP addresses and a subnet mask.
 	 * to define a single host, use a /32 mask. You cannot use DNS entries here,
 	 * as they're prone to be hijacked by replacing their IP addresses.
 	 * see https://github.com/tailscale/tailscale/issues/3800 for more information.
 	 */
-	readonly Hosts: { [x: string]: string };
-	readonly acls: {
-		readonly action: 'accept';
-		readonly proto?: string;
-		readonly src: string[];
-		readonly dst: string[];
+	Hosts: { [x: string]: string };
+	acls: {
+		action: 'accept';
+		proto?: string;
+		src: string[];
+		dst: string[];
 	}[];
-	readonly $$comments: {
-		readonly $acls?: { [x: number]: string[][] };
-	};
+	// readonly $$comments: {
+	// 	readonly $acls?: { [x: number]: string[][] };
+	// };
 }
 
 export interface JsonComments {
@@ -78,24 +79,36 @@ export interface JsonComments {
 export class User implements V1User {
 	public static async list(headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/user');
-		return { ...response, data: response.data?.users?.map((user) => new User(user)) };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/user' }) : undefined,
+			data: response.data?.users?.map((user) => new User(user))
+		};
 	}
 
 	public static async find(name: string, headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/user/{name}', { params: { path: { name } } });
-		return { ...response, data: response.data?.user ? new User(response.data.user) : undefined };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/user/' + name }) : undefined,
+			data: response.data?.user ? new User(response.data.user) : undefined
+		};
 	}
 
 	public static async create(name: string, headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.POST('/api/v1/user', { body: { name } });
-		return { ...response, data: response.data?.user ? new User(response.data.user) : undefined };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'POST', path: '/api/v1/user' }) : undefined,
+			data: response.data?.user ? new User(response.data.user) : undefined
+		};
 	}
 
 	public readonly name?: string | undefined;
 	public readonly id?: string | undefined;
 	public readonly createdAt?: string | undefined;
 
-	constructor(data: V1User) {
+	public constructor(data: V1User) {
 		if (!data.name) throw new Error('Name is required to create a new User!');
 		Object.assign(this, data);
 	}
@@ -105,12 +118,22 @@ export class User implements V1User {
 		const response = await headscale.client.POST('/api/v1/user/{oldName}/rename/{newName}', {
 			params: { path: { oldName: this.name, newName } }
 		});
-		return { ...response, data: response.data?.user ? new User(response.data.user) : undefined };
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'POST', path: `/api/v1/user/${this.name}/rename/${newName}` })
+				: undefined,
+			data: response.data?.user ? new User(response.data.user) : undefined
+		};
 	}
 
 	public async delete(headscale: Headscale = new Headscale()) {
 		if (!this.name) throw new Error("User's name is undefined");
-		return await headscale.client.DELETE('/api/v1/user/{name}', { params: { path: { name: this.name } } });
+		const response = await headscale.client.DELETE('/api/v1/user/{name}', { params: { path: { name: this.name } } });
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'DELETE', path: '/api/v1/user/' + this.name }) : undefined
+		};
 	}
 
 	public async getPreAuthKeys(headscale: Headscale = new Headscale()) {
@@ -126,12 +149,20 @@ export class User implements V1User {
 export class PreAuthKey implements V1PreAuthKey {
 	public static async find(user?: string, headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/preauthkey', { params: { query: { user } } });
-		return { ...response, data: response.data?.preAuthKeys?.map((key) => new PreAuthKey(key)) };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/preauthkey' }) : undefined,
+			data: response.data?.preAuthKeys?.map((key) => new PreAuthKey(key))
+		};
 	}
 
 	public static async create(body: components['schemas']['v1CreatePreAuthKeyRequest'], headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.POST('/api/v1/preauthkey', { body });
-		return { ...response, data: response.data?.preAuthKey ? new PreAuthKey(response.data.preAuthKey) : undefined };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'POST', path: '/api/v1/preauthkey' }) : undefined,
+			data: response.data?.preAuthKey ? new PreAuthKey(response.data.preAuthKey) : undefined
+		};
 	}
 
 	public readonly id?: string | undefined;
@@ -144,19 +175,27 @@ export class PreAuthKey implements V1PreAuthKey {
 	public readonly reusable?: boolean | undefined;
 	public readonly ephemeral?: boolean | undefined;
 
-	constructor(data: V1PreAuthKey) {
+	public constructor(data: V1PreAuthKey) {
 		Object.assign(this, data);
 	}
 
 	public async expire(headscale: Headscale = new Headscale()) {
-		return await headscale.client.POST('/api/v1/preauthkey/expire', { body: { key: this.key, user: this.user } });
+		const response = await headscale.client.POST('/api/v1/preauthkey/expire', { body: { key: this.key, user: this.user } });
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'POST', path: '/api/v1/preauthkey/expire' }) : undefined
+		};
 	}
 }
 
 export class Route implements V1Route {
 	public static async list(headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/routes');
-		return { ...response, data: response.data?.routes?.map((route) => new Route(route)) };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/routes' }) : undefined,
+			data: response.data?.routes?.map((route) => new Route(route))
+		};
 	}
 
 	public readonly id?: string | undefined;
@@ -169,40 +208,70 @@ export class Route implements V1Route {
 	public readonly deletedAt?: string | undefined;
 	public readonly machine?: V1Node | undefined;
 
-	constructor(data: V1Route) {
+	public constructor(data: V1Route) {
 		Object.assign(this, data);
 	}
 
 	public async delete(headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Cannot create route without id.');
-		return await headscale.client.DELETE('/api/v1/routes/{routeId}', { params: { path: { routeId: this.id } } });
+		if (!this.id) throw new Error('Cannot create route without id.');
+		const response = await headscale.client.DELETE('/api/v1/routes/{routeId}', { params: { path: { routeId: this.id } } });
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'DELETE', path: '/api/v1/routes/' + this.id }) : undefined
+		};
 	}
 
 	public async disable(headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Cannot disable route without id.');
-		return await headscale.client.POST('/api/v1/routes/{routeId}/disable', { params: { path: { routeId: this.id } } });
+		if (!this.id) throw new Error('Cannot disable route without id.');
+		const response = await headscale.client.POST('/api/v1/routes/{routeId}/disable', {
+			params: { path: { routeId: this.id } }
+		});
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'POST', path: `/api/v1/routes/${this.id}/disable` })
+				: undefined
+		};
 	}
 
 	public async enable(headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Cannot enable route without id.');
-		return await headscale.client.POST('/api/v1/routes/{routeId}/enable', { params: { path: { routeId: this.id } } });
+		if (!this.id) throw new Error('Cannot enable route without id.');
+		const response = await headscale.client.POST('/api/v1/routes/{routeId}/enable', { params: { path: { routeId: this.id } } });
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'POST', path: `/api/v1/routes/${this.id}/enable` })
+				: undefined
+		};
 	}
 }
 
 export class Machine implements V1Node {
 	public static async get(nodeId: string, headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/node/{nodeId}', { params: { path: { nodeId } } });
-		return { ...response, data: response.data?.node ? new Machine(response.data.node) : undefined };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/node/' + nodeId }) : undefined,
+			data: response.data?.node ? new Machine(response.data.node) : undefined
+		};
 	}
 
 	public static async list(user?: string, headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/node', { params: { query: { user } } });
-		return { ...response, data: response.data?.nodes?.map((machine) => new Machine(machine)) };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/node' }) : undefined,
+			data: response.data?.nodes?.map((machine) => new Machine(machine))
+		};
 	}
 
 	public static async register(query: { key: string; user: string }, headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.POST('/api/v1/node/register', { params: { query } });
-		return { ...response, data: response.data?.node ? new Machine(response.data.node) : undefined };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'POST', path: '/api/v1/node/register' }) : undefined,
+			data: response.data?.node ? new Machine(response.data.node) : undefined
+		};
 	}
 
 	public readonly id?: string | undefined;
@@ -224,63 +293,107 @@ export class Machine implements V1Node {
 	public readonly validTags?: string[] | undefined;
 	public readonly forcedTags?: string[] | undefined;
 
-	constructor(data: V1Node) {
+	public constructor(data: V1Node) {
 		Object.assign(this, data);
 	}
 
 	public async delete(headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Failed to get machine instance id.');
-		return await headscale.client.DELETE('/api/v1/node/{nodeId}', { params: { path: { nodeId: this.id } } });
+		if (!this.id) throw new Error('Failed to get machine instance id.');
+		const response = await headscale.client.DELETE('/api/v1/node/{nodeId}', { params: { path: { nodeId: this.id } } });
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'DELETE', path: '/api/v1/node/' + this.id }) : undefined
+		};
 	}
 
 	public async expire(headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Failed to get machine instance id.');
+		if (!this.id) throw new Error('Failed to get machine instance id.');
 		const response = await headscale.client.POST('/api/v1/node/{nodeId}/expire', { params: { path: { nodeId: this.id } } });
-		return { ...response, data: response.data?.node ? new Machine(response.data.node) : undefined };
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'POST', path: `/api/v1/node/${this.id}/expire` })
+				: undefined,
+			data: response.data?.node ? new Machine(response.data.node) : undefined
+		};
 	}
 
 	public async reassign(user: string, headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Failed to get machine instance id.');
+		if (!this.id) throw new Error('Failed to get machine instance id.');
 		const response = await headscale.client.POST('/api/v1/node/{nodeId}/user', {
 			params: { path: { nodeId: this.id }, query: { user } }
 		});
-		return { ...response, data: response.data?.node ? new Machine(response.data.node) : undefined };
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'POST', path: `/api/v1/node/${this.id}/user` })
+				: undefined,
+			data: response.data?.node ? new Machine(response.data.node) : undefined
+		};
 	}
 
 	public async rename(newName: string, headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Failed to get machine instance id.');
+		if (!this.id) throw new Error('Failed to get machine instance id.');
 		const response = await headscale.client.POST('/api/v1/node/{nodeId}/rename/{newName}', {
 			params: { path: { nodeId: this.id, newName } }
 		});
-		return { ...response, data: response.data?.node ? new Machine(response.data.node) : undefined };
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'POST', path: `/api/v1/node/${this.id}/rename/${newName}` })
+				: undefined,
+			data: response.data?.node ? new Machine(response.data.node) : undefined
+		};
 	}
 
 	public async setTags(tags: string[], headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Failed to get machine instance id.');
+		if (!this.id) throw new Error('Failed to get machine instance id.');
 		const response = await headscale.client.POST('/api/v1/node/{nodeId}/tags', {
 			params: { path: { nodeId: this.id } },
 			body: { tags: tags.map((tag) => (tagRegex.test(tag) ? tag : `tag:${tag}`)) }
 		});
-		return { ...response, data: response.data?.node ? new Machine(response.data.node) : undefined };
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'POST', path: `/api/v1/node/${this.id}/tags` })
+				: undefined,
+			data: response.data?.node ? new Machine(response.data.node) : undefined
+		};
 	}
 
 	public async getRoutes(headscale: Headscale = new Headscale()) {
-		if (!this.id) throw new Error('Internal: Failed to get machine instance id.');
+		if (!this.id) throw new Error('Failed to get machine instance id.');
 		const response = await headscale.client.GET('/api/v1/node/{nodeId}/routes', { params: { path: { nodeId: this.id } } });
-		return { ...response, data: response.data?.routes?.map((route) => new Route(route)) };
+		return {
+			...response,
+			error: response.error
+				? new ApiError(response.error, { method: 'GET', path: `/api/v1/node/${this.id}/routes` })
+				: undefined,
+			data: response.data?.routes?.map((route) => new Route(route))
+		};
 	}
 }
 
 export class ApiKey implements V1ApiKey {
 	public static async list(headscale: Headscale = new Headscale()) {
 		const response = await headscale.client.GET('/api/v1/apikey');
-		return { ...response, data: response.data?.apiKeys?.map((key) => new ApiKey(key)) };
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/apikey' }) : undefined,
+			data: response.data?.apiKeys?.map((key) => new ApiKey(key))
+		};
 	}
 
 	public static async create(key: { expiration: string | number | Date }, headscale: Headscale = new Headscale()) {
-		return await headscale.client.POST('/api/v1/apikey', {
+		const response = await headscale.client.POST('/api/v1/apikey', {
 			body: { expiration: (key.expiration instanceof Date ? key.expiration : new Date(key.expiration)).toISOString() }
 		});
+
+		// No data parsing required as it only returns the new API key as string
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'POST', path: '/api/v1/apikey' }) : undefined
+		};
 	}
 
 	public readonly id?: string | undefined;
@@ -289,12 +402,16 @@ export class ApiKey implements V1ApiKey {
 	public readonly expiration?: string | undefined;
 	public readonly lastSeen?: string | undefined;
 
-	constructor(data: V1ApiKey) {
+	public constructor(data: V1ApiKey) {
 		Object.assign(this, data);
 	}
 
 	public async expire(headscale: Headscale = new Headscale()) {
-		return await headscale.client.POST('/api/v1/apikey/expire', { body: { prefix: this.prefix } });
+		const response = await headscale.client.POST('/api/v1/apikey/expire', { body: { prefix: this.prefix } });
+		return {
+			...response,
+			error: response.error ? new ApiError(response.error, { method: 'POST', path: '/api/v1/apikey/expire' }) : undefined
+		};
 	}
 }
 
@@ -303,6 +420,7 @@ export class Acl implements V1Policy {
 		const response = await headscale.client.GET('/api/v1/policy');
 		return {
 			...response,
+			error: response.error ? new ApiError(response.error, { method: 'GET', path: '/api/v1/policy' }) : undefined,
 			data: response.data?.policy ? new Acl(response.data.policy, response.data.updatedAt) : undefined
 		};
 	}
@@ -349,7 +467,7 @@ export class Acl implements V1Policy {
 
 	protected readonly raw: string;
 
-	constructor(data: string, updatedAt?: string) {
+	public constructor(data: string, updatedAt?: string) {
 		this.raw = data;
 		this.updatedAt = updatedAt;
 		this.$$comments = {};
@@ -367,11 +485,80 @@ export class Acl implements V1Policy {
 		const response = await headscale.client.PUT('/api/v1/policy', { body: { policy: this.stringified } });
 		return {
 			...response,
+			error: response.error ? new ApiError(response.error, { method: 'PUT', path: '/api/v1/policy' }) : undefined,
 			data: response.data?.policy ? new Acl(response.data.policy, response.data.updatedAt) : undefined
 		};
 	}
 
 	public reset(): Acl {
 		return new Acl(this.raw);
+	}
+}
+
+export class TestAcl {
+	public readonly policy?: V1Policy;
+
+	public readonly hosts: {
+		name: string;
+		cidr: string;
+		description?: string;
+	}[];
+	public readonly groups: {
+		name: string;
+		members: string[];
+		ownedTags: string[];
+		description?: string;
+	}[];
+	public readonly tagOwners: {
+		name: string;
+		members: string[];
+		description?: string;
+	}[];
+	public readonly acls: {
+		action: 'accept';
+		src: string[];
+		dst: string[];
+		proto?: string;
+		description?: string;
+	}[];
+
+	get comments() {
+		type CommentObj = { $$comments: { [x: string]: string[][] } };
+
+		return {
+			acls: (this.policy as { $$comments: { $acls: { [x: number]: string[][] } } } | undefined)?.$$comments?.$acls,
+			groups: (this.policy?.groups as unknown as CommentObj | undefined)?.$$comments,
+			tagOwners: (this.policy?.tagOwners as unknown as CommentObj | undefined)?.$$comments,
+			hosts: (this.policy?.Hosts as unknown as CommentObj | undefined)?.$$comments
+		};
+	}
+
+	public constructor(policy: string) {
+		this.policy = policy?.length ? parse(stripJsonTrailingCommas(policy)) : undefined;
+
+		const comments = this.comments;
+
+		this.hosts = Object.entries(this.policy?.Hosts || {}).map(([name, cidr]) => ({
+			name,
+			cidr,
+			description: comments.hosts?.[name]?.[0]?.[0]
+		}));
+
+		this.groups = Object.entries(this.policy?.groups || {}).map(([name, members]) => ({
+			name,
+			members,
+			ownedTags: Object.entries(this.policy?.tagOwners || {})
+				.filter((i) => i[1].includes(name))
+				.map(([k]) => k),
+			description: comments.groups?.[name]?.[0]?.[0]
+		}));
+
+		this.tagOwners = Object.entries(this.policy?.tagOwners || {}).map(([name, members]) => ({
+			name,
+			members,
+			description: comments.tagOwners?.[name]?.[0]?.[0]
+		}));
+
+		this.acls = this.policy?.acls.map((val, index) => ({ ...val, description: comments.acls?.[index]?.[0]?.[0] })) || [];
 	}
 }

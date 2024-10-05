@@ -11,7 +11,7 @@
 	const routes = writable(data.routes || []);
 
 	page.subscribe((state) => {
-		routes.set(state.data.routes);
+		routes.set(state.data?.routes);
 	});
 </script>
 

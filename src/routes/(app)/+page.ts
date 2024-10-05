@@ -1,4 +1,4 @@
-import { Headscale, Route } from '$lib/api';
+import { formatApiErrors, Headscale, Route } from '$lib/api';
 import { loadSession } from '$lib/store/session';
 
 export async function load({ fetch }) {
@@ -9,6 +9,6 @@ export async function load({ fetch }) {
 
 	return {
 		routes: routes.data,
-		errors: [routes.error].filter((i) => !!i)
+		errors: formatApiErrors([routes.error])
 	};
 }

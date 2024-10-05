@@ -1,6 +1,5 @@
 <script lang="ts">
 	import CircleAlert from 'lucide-svelte/icons/circle-alert';
-	// import X from 'lucide-svelte/icons/x';
 
 	import { dev } from '$app/environment';
 
@@ -16,16 +15,12 @@
 
 	export let err: any;
 	export let toast: boolean = false;
-
-	// let hidden = false;
 </script>
 
 {#if toast}
 	<span class="text-destructive">
 		{#if err instanceof ApiError}
 			<span class="font-semibold">{err.name}:</span>
-			<!-- {err.cause.method}
-			{err.cause.path}: {err.message} -->
 		{:else if err instanceof Error}
 			<span class="font-semibold">{err.name}:</span>
 			{err.message}
@@ -47,8 +42,11 @@
 		<Alert.Title>
 			{#if err instanceof ApiError}
 				<span class="font-semibold">{err.name}:</span>
-				<!-- {err.cause.method}
-				{err.cause.path}: {err.message} -->
+				{#if err.cause?.method && err.cause?.path}
+					{err.cause.method}
+					{err.cause.path}:
+				{/if}
+				{err.message}
 			{:else if err instanceof Error}
 				<span class="font-semibold">{err.name}:</span>
 				{err.message}
@@ -56,9 +54,6 @@
 				<span class="font-semibold">Internal error</span>
 			{/if}
 		</Alert.Title>
-		<!-- <button class="absolute right-4 top-4" on:click={() => (hidden = true)}>
-		<X class="h-4 w-4" />
-	</button> -->
 
 		<Alert.Description>
 			{#if toast || err instanceof FormError || (err instanceof ApiError && dev !== true)}
@@ -82,7 +77,7 @@
 					</div>
 				{/if}
 			{:else}
-				<Code yaml={err} class="whitespace-nowrap" />
+				<Code yaml={err} />
 			{/if}
 		</Alert.Description>
 	</Alert.Root>
